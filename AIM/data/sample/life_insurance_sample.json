@@ -1,0 +1,32 @@
+{
+  "applicant_first_name": "John",
+  "applicant_last_name": "Doe",
+  "applicant_birth_date": "1985-06-15",
+  "applicant_gender": "M",
+  "applicant_address": {
+    "street": "123 Main St",
+    "city": "Anytown",
+    "state": "CA",
+    "zip": "12345"
+  },
+  "policy_face_amount": "250000",
+  "policy_effective_date": "2024-01-01",
+  "premium_mode": "M",
+  "beneficiaries": [
+    {
+      "name": "Jane Doe",
+      "relationship": "Spouse",
+      "percentage": "100"
+    }
+  ],
+  "agent_info": {
+    "agent_code": "AGT001",
+    "agent_name": "Agent Smith"
+  },
+  "underwriting_info": {
+    "health_questions": {
+      "tobacco_use": "No",
+      "medical_conditions": "None"
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "life": {
+    "insured_info": {
+      "fields": [
+        "insured_first_name",
+        "insured_last_name",
+        "insured_birth_date",
+        "insured_gender"
+      ],
+      "defaults": {
+        "insured_gender": "Unknown"
+      }
+    },
+    "policy_info": {
+      "fields": [
+        "coverage_amount",
+        "policy_start_date",
+        "premium_frequency"
+      ],
+      "defaults": {
+        "premium_frequency": "Monthly"
+      }
+    },
+    "calculation_inputs": {
+      "fields": [
+        "coverage_amount",
+        "insured_birth_date",
+        "premium_frequency"
+      ],
+      "defaults": {}
+    }
+  },
+  "annuity": {
+    "annuitant_info": {
+      "fields": [
+        "annuitant_first_name",
+        "annuitant_last_name",
+        "annuitant_birth_date"
+      ],
+      "defaults": {}
+    },
+    "contract_info": {
+      "fields": [
+        "premium_amount",
+        "contract_start_date"
+      ],
+      "defaults": {}
+    }
+  },
+  "health": {
+    "member_info": {
+      "fields": [
+        "member_first_name",
+        "member_last_name",
+        "member_birth_date"
+      ],
+      "defaults": {}
+    },
+    "coverage_info": {
+      "fields": [
+        "coverage_type",
+        "deductible"
+      ],
+      "defaults": {
+        "deductible": 0
+      }
+    }
+  }
+}

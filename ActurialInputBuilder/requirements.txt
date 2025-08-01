@@ -1,0 +1,29 @@
+# Actuarial Input Builder - Requirements
+
+# Core dependencies
+pandas>=1.3.0
+numpy>=1.21.0
+python-dateutil>=2.8.0
+
+# Configuration and validation
+jsonschema>=4.0.0
+pydantic>=1.9.0
+
+# Testing (optional)
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Development tools (optional)
+black>=22.0.0
+flake8>=5.0.0
+mypy>=0.900
+
+# Logging and monitoring
+structlog>=22.0.0
+
+# For advanced date parsing
+python-dateutil>=2.8.0
+
+# For handling different file formats (optional)
+openpyxl>=3.0.0  # For Excel files
+PyYAML>=6.0      # For YAML configuration

@@ -1,0 +1,18 @@
+{
+  "life": [
+    {
+      "field": "coverage_amount",
+      "type": "currency_conversion",
+      "from_currency": "USD",
+      "to_currency": "USD"
+    }
+  ],
+  "annuity": [
+    {
+      "field": "premium_amount",
+      "type": "currency_conversion",
+      "from_currency": "USD",
+      "to_currency": "USD"
+    }
+  ]
+}
