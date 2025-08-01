@@ -1,0 +1,50 @@
+{
+  "life": {
+    "applicant_first_name": "insured_first_name",
+    "applicant_last_name": "insured_last_name",
+    "applicant_birth_date": "insured_birth_date",
+    "applicant_gender": {
+      "target_field": "insured_gender",
+      "value_mapping": {
+        "M": "Male",
+        "F": "Female",
+        "Male": "Male",
+        "Female": "Female"
+      }
+    },
+    "policy_face_amount": {
+      "target_field": "coverage_amount",
+      "data_type": "float"
+    },
+    "policy_effective_date": "policy_start_date",
+    "premium_mode": {
+      "target_field": "premium_frequency",
+      "value_mapping": {
+        "A": "Annual",
+        "SA": "Semi-Annual",
+        "Q": "Quarterly",
+        "M": "Monthly"
+      }
+    }
+  },
+  "annuity": {
+    "annuitant_first_name": "annuitant_first_name",
+    "annuitant_last_name": "annuitant_last_name",
+    "annuitant_birth_date": "annuitant_birth_date",
+    "initial_premium": {
+      "target_field": "premium_amount",
+      "data_type": "float"
+    },
+    "annuity_start_date": "contract_start_date"
+  },
+  "health": {
+    "member_first_name": "member_first_name",
+    "member_last_name": "member_last_name",
+    "member_birth_date": "member_birth_date",
+    "plan_type": "coverage_type",
+    "deductible_amount": {
+      "target_field": "deductible",
+      "data_type": "float"
+    }
+  }
+}

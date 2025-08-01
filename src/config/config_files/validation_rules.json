@@ -1,0 +1,80 @@
+{
+  "base": {
+    "basic": {
+      "required_fields": [
+        "applicant_first_name",
+        "applicant_last_name",
+        "applicant_birth_date"
+      ],
+      "field_types": {
+        "applicant_first_name": "string",
+        "applicant_last_name": "string",
+        "applicant_birth_date": "date",
+        "policy_face_amount": "number",
+        "premium_amount": "number"
+      },
+      "field_ranges": {
+        "policy_face_amount": {
+          "min": 1000,
+          "max": 10000000
+        },
+        "premium_amount": {
+          "min": 10,
+          "max": 100000
+        }
+      },
+      "field_formats": {
+        "applicant_birth_date": {
+          "date_format": "%Y-%m-%d"
+        }
+      }
+    },
+    "business": {
+      "age_validations": {
+        "min_age": 18,
+        "max_age": 85,
+        "warning_age": 65
+      },
+      "coverage_validations": {
+        "min_amount": 1000,
+        "max_amount": 5000000
+      }
+    },
+    "strict": {
+      "field_dependencies": [
+        {
+          "source_field": "beneficiary_name",
+          "dependent_field": "beneficiary_relationship",
+          "condition": "required_if_present"
+        }
+      ],
+      "consistency_checks": [
+        {
+          "type": "date_order",
+          "earlier_field": "applicant_birth_date",
+          "later_field": "policy_effective_date"
+        }
+      ]
+    }
+  },
+  "life": {
+    "business": {
+      "age_validations": {
+        "min_age": 18,
+        "max_age": 80
+      },
+      "coverage_validations": {
+        "min_amount": 10000,
+        "max_amount": 10000000
+      }
+    }
+  },
+  "annuity": {
+    "business": {
+      "age_validations": {
+        "min_age": 18,
+        "max_age": 85
+      }
+    }
+  }
+}
