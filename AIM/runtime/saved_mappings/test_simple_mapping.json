@@ -1,0 +1,20 @@
+{
+  "name": "Test Simple Mapping",
+  "product_type": "life_insurance",
+  "description": "Simple test mapping",
+  "created_date": "2025-08-12T15:50:42.722225",
+  "field_mappings": [
+    {
+      "source": "PolicyNum",
+      "target": "policy_number",
+      "transformation": "trim",
+      "required": true
+    },
+    {
+      "source": "Name",
+      "target": "insured_name",
+      "transformation": "trim",
+      "required": true
+    }
+  ]
+}

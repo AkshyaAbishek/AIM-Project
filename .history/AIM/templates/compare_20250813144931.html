@@ -1,0 +1,918 @@
+{% extends "base.html" %}
+
+{% block title %}AIM - Data Compare{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-6">
+                <i class="fas fa-balance-scale me-3" style="color: var(--primary-color);"></i>
+                Data Compare
+                <a href="{{ url_for('help_page') }}#collapseCompare" class="btn btn-outline-info btn-sm ms-3" 
+                   data-bs-toggle="tooltip" title="Get help with data comparison">
+                    <i class="fas fa-question-circle"></i>
+                </a>
+            </h1>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                <i class="fas fa-home me-2"></i>Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Source Data Selection -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-database me-2"></i>
+                    Select Data to Compare
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="sourceData" class="form-label">
+                            <i class="fas fa-file-import me-1"></i>
+                            Source Data (JSON Input) <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="sourceData" onchange="if(typeof loadSourceData === 'function') { loadSourceData(); } else { console.error('loadSourceData function not available'); }" required>
+                            <option value="">Select processed data record...</option>
+                            {% for record in processed_records %}
+                            <option value="{{ record.id }}" data-product="{{ record.product_type }}">
+                                {{ record.name }} ({{ record.product_type|title }}) - {{ record.created_date[:10] if record.created_date else 'No Date' }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Select the processed JSON data to compare</div>
+                        
+                        <!-- Upload New JSON Button -->
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="if(typeof window.uploadNewJSON === 'function') { window.uploadNewJSON(); } else { console.error('uploadNewJSON function not available'); }">
+                                <i class="fas fa-upload me-1"></i>Upload New JSON
+                            </button>
+                            <a href="{{ url_for('upload_file') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-plus me-1"></i>Add Data
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="calculatorPath" class="form-label">
+                            <i class="fas fa-calculator me-1"></i>
+                            Calculator Reference <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="calculatorPath" 
+                                   placeholder="e.g., /calculators/life_insurance/standard.json" required>
+                            <button type="button" class="btn btn-outline-secondary dropdown-toggle" 
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-folder-open"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><h6 class="dropdown-header">Available Calculators</h6></li>
+                                {% for calculator in available_calculators %}
+                                <li><a class="dropdown-item" href="#" onclick="if(typeof setCalculator === 'function') { setCalculator('{{ calculator.path }}'); } else { console.error('setCalculator function not available'); }">
+                                    <i class="fas fa-{{ calculator.icon }} me-2"></i>{{ calculator.name }}
+                                </a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="form-text">Calculator to use for comparison and fill missing values</div>
+                        
+                        <!-- Upload Calculator Button -->
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="if(typeof window.uploadCalculator === 'function') { window.uploadCalculator(); } else { console.error('uploadCalculator function not available'); }">
+                                <i class="fas fa-upload me-1"></i>Upload Calculator
+                            </button>
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="if(typeof window.showCalculatorHelp === 'function') { window.showCalculatorHelp(); } else { console.error('showCalculatorHelp function not available'); }">
+                                <i class="fas fa-question-circle me-1"></i>Help
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <button type="button" class="btn btn-primary" onclick="if(typeof performComparison === 'function') { performComparison(); } else { console.error('performComparison function not available'); }">
+                            <i class="fas fa-play me-2"></i>
+                            Start Comparison
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison Results -->
+<div class="row" id="comparisonResults" style="display: none;">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Comparison Results
+                </h5>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="if(typeof exportComparisonExcel === 'function') { exportComparisonExcel(); } else { console.error('exportComparisonExcel function not available'); }">>
+                        <i class="fas fa-file-excel me-2"></i>Export Excel
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="if(typeof exportComparison === 'function') { exportComparison(); } else { console.error('exportComparison function not available'); }">>
+                        <i class="fas fa-download me-2"></i>Export JSON
+                    </button>
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="if(typeof saveFilledData === 'function') { saveFilledData(); } else { console.error('saveFilledData function not available'); }">>
+                        <i class="fas fa-save me-2"></i>Save Filled Data
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Summary Stats -->
+                <div class="row mb-4" id="summaryStats">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                
+                <!-- Detailed Comparison Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 20%;">Field Name</th>
+                                <th style="width: 20%;">Source Value</th>
+                                <th style="width: 20%;">Calculator Value</th>
+                                <th style="width: 10%;">Values Match</th>
+                                <th style="width: 10%;">Status</th>
+                                <th style="width: 10%;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTableBody">
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Field Details Modal -->
+<div class="modal fade" id="fieldDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>Field Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="fieldDetailsBody">
+                <!-- Field details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="if(typeof updateFieldValue === 'function') { updateFieldValue(); } else { console.error('updateFieldValue function not available'); }">Update Field</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentSourceData = null;
+let currentCalculatorData = null;
+let comparisonResult = null;
+
+// Define critical functions first to ensure they're available for HTML onclick handlers
+function setCalculator(path) {
+    const calculatorPathElement = document.getElementById('calculatorPath');
+    if (calculatorPathElement) {
+        calculatorPathElement.value = path;
+    } else {
+        console.error('calculatorPath element not found');
+    }
+}
+window.setCalculator = setCalculator;
+
+function loadSourceData() {
+    const selectElement = document.getElementById('sourceData');
+    if (!selectElement) {
+        console.error('sourceData element not found');
+        return;
+    }
+    
+    const recordId = selectElement.value;
+    
+    if (!recordId) {
+        currentSourceData = null;
+        return;
+    }
+    
+    // Load the selected record data
+    fetch(`/api/record/${recordId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentSourceData = data.record;
+                
+                // Auto-set calculator path if available
+                if (data.record.calculator_path) {
+                    const calculatorPathElement = document.getElementById('calculatorPath');
+                    if (calculatorPathElement) {
+                        calculatorPathElement.value = data.record.calculator_path;
+                    }
+                }
+            } else {
+                console.error('Error loading source data:', data.message);
+                alert('Error loading source data: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading source data');
+        });
+}
+window.loadSourceData = loadSourceData;
+
+function performComparison() {
+    const recordId = document.getElementById('sourceData')?.value;
+    const calculatorPath = document.getElementById('calculatorPath')?.value?.trim();
+    
+    // Validation
+    if (!recordId) {
+        alert('Please select source data to compare.');
+        return;
+    }
+    
+    if (!calculatorPath) {
+        alert('Please specify calculator path.');
+        return;
+    }
+    
+    // Perform comparison
+    fetch('/api/compare-data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            record_id: recordId,
+            calculator_path: calculatorPath
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            comparisonResult = data.comparison;
+            
+            // Display the results using the displayComparisonResults function
+            if (typeof window.displayComparisonResults === 'function') {
+                window.displayComparisonResults(data.comparison);
+            } else {
+                console.error('displayComparisonResults function not available, showing basic results');
+                // Basic fallback display
+                const summaryStats = document.getElementById('summaryStats');
+                if (summaryStats) {
+                    const stats = data.comparison.stats;
+                    summaryStats.innerHTML = `
+                        <div class="col-md-3">
+                            <div class="card text-center bg-primary text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">${stats.total_fields}</h5>
+                                    <p class="card-text">Total Fields</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">${stats.matching_fields}</h5>
+                                    <p class="card-text">Matching</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center bg-warning">
+                                <div class="card-body">
+                                    <h5 class="card-title">${stats.missing_fields}</h5>
+                                    <p class="card-text">Missing</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center bg-info text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">${stats.completion_percentage}%</h5>
+                                    <p class="card-text">Complete</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Basic table display
+                const tableBody = document.getElementById('comparisonTableBody');
+                if (tableBody) {
+                    tableBody.innerHTML = data.comparison.fields.map(field => `
+                        <tr>
+                            <td><strong>${field.field_name}</strong></td>
+                            <td>${field.source_value || '<em>Not set</em>'}</td>
+                            <td>${field.calculator_value || '<em>No default</em>'}</td>
+                            <td>${field.values_match ? '✅' : '❌'}</td>
+                            <td><span class="badge bg-${field.status === 'match' ? 'success' : field.status === 'mismatch' ? 'warning' : field.status === 'missing' ? 'danger' : 'info'}">${field.status}</span></td>
+                            <td>-</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+            
+            // Show results section
+            const resultsSection = document.getElementById('comparisonResults');
+            if (resultsSection) {
+                resultsSection.style.display = 'block';
+            } else {
+                console.error('comparisonResults element not found');
+            }
+            
+            alert('Comparison completed successfully! Results are displayed below.');
+        } else {
+            alert('Error performing comparison: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error performing comparison. Please try again.');
+    });
+}
+window.performComparison = performComparison;
+
+// Function to ensure all window assignments are made after DOM is loaded
+function initializeFunctions() {
+    // These will be assigned individually after each function definition
+}
+
+// Call initialization when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeFunctions);
+} else {
+    initializeFunctions();
+}
+
+// Upload functionality for JSON data - moved to top to ensure it's defined
+function uploadNewJSON() {
+    // Create hidden file input
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json,application/json';
+    fileInput.style.display = 'none';
+    
+    fileInput.onchange = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const jsonData = JSON.parse(e.target.result);
+                
+                // Show modal to enter name and product type
+                showJSONUploadModal(jsonData, file.name);
+                
+            } catch (error) {
+                showAlert('error', 'Invalid JSON file: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
+    };
+    
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+}
+
+// Immediately attach to window object
+window.uploadNewJSON = uploadNewJSON;
+
+// Upload functionality for calculator files
+function uploadCalculator() {
+    // Create hidden file input
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json,application/json';
+    fileInput.style.display = 'none';
+    
+    fileInput.onchange = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('calculator', file);
+        
+        // Show loading state
+        showLoading();
+        
+        // Upload to server
+        fetch('/api/upload-calculator', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                // Set the calculator path in the input field
+                document.getElementById('calculatorPath').value = data.calculator_path;
+                showAlert('success', data.message);
+            } else {
+                showAlert('error', 'Upload failed: ' + data.message);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            console.error('Upload error:', error);
+            showAlert('error', 'Error uploading calculator file. Please try again.');
+        });
+    };
+    
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+}
+
+// Immediately attach to window object
+window.uploadCalculator = uploadCalculator;
+
+// Show help for calculator format
+function showCalculatorHelp() {
+    const helpModal = `
+        <div class="modal fade" id="calculatorHelpModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Calculator File Format</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Calculator files should be JSON files with the following structure:</p>
+                        <pre><code>{
+  "name": "Life Insurance Standard Calculator",
+  "product_type": "life_insurance",
+  "fields": {
+    "age": {
+      "type": "number",
+      "required": true,
+      "default": 30
+    },
+    "gender": {
+      "type": "string",
+      "required": true,
+      "options": ["M", "F"]
+    },
+    "smoker": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "calculations": {
+    "premium": "base_rate * age_factor * gender_factor"
+  }
+}</code></pre>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('calculatorHelpModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', helpModal);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('calculatorHelpModal'));
+    modal.show();
+}
+
+// Attach showCalculatorHelp to window object
+window.showCalculatorHelp = showCalculatorHelp;
+
+// Show modal for JSON upload details
+function showJSONUploadModal(jsonData, filename) {
+    const modalId = 'jsonUploadModal';
+    const modalHTML = `
+        <div class="modal fade" id="${modalId}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Upload JSON Data</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="jsonUploadForm">
+                            <div class="mb-3">
+                                <label for="dataName" class="form-label">Data Name</label>
+                                <input type="text" class="form-control" id="dataName" value="${filename.replace('.json', '')}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productType" class="form-label">Product Type</label>
+                                <select class="form-select" id="productType" required>
+                                    <option value="life_insurance">Life Insurance</option>
+                                    <option value="annuity">Annuity</option>
+                                    <option value="health_insurance">Health Insurance</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="if(typeof submitJSONUpload === 'function') { submitJSONUpload(); } else { console.error('submitJSONUpload function not available'); }">Upload</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body and show
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    const modal = new bootstrap.Modal(document.getElementById(modalId));
+    modal.show();
+    
+    // Store data for submission
+    window.uploadJsonData = jsonData;
+}
+
+// Submit JSON upload
+function submitJSONUpload() {
+    const name = document.getElementById('dataName').value;
+    const productType = document.getElementById('productType').value;
+    const jsonData = window.uploadJsonData;
+    
+    if (!name || !productType) {
+        showAlert('error', 'Please fill in all fields');
+        return;
+    }
+    
+    // Submit to server
+    fetch('/api/upload-json', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            name: name,
+            product_type: productType,
+            json_data: jsonData
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', 'JSON data uploaded successfully');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('jsonUploadModal'));
+            modal.hide();
+            
+            // Refresh the page to show new data
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showAlert('error', 'Upload failed: ' + data.message);
+        }
+    })
+    .catch(error => {
+        showAlert('error', 'Upload error: ' + error.message);
+    });
+}
+window.submitJSONUpload = submitJSONUpload;
+
+// setCalculator function already defined at the top of the script
+// loadSourceData function already defined at the top of the script
+// performComparison function already defined at the top of the script
+
+function exportComparison() {
+    if (!comparisonResult) {
+        showAlert('error', 'No comparison results to export.');
+        return;
+    }
+    
+    // Create downloadable JSON
+    const exportData = {
+        comparison_date: new Date().toISOString(),
+        source_record_id: document.getElementById('sourceData').value,
+        calculator_path: document.getElementById('calculatorPath').value,
+        summary: comparisonResult.stats,
+        field_details: comparisonResult.fields
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `comparison_results_${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    
+    showAlert('success', 'Comparison results exported successfully.');
+}
+window.exportComparison = exportComparison;
+
+function exportComparisonExcel() {
+    // Excel export logic here
+    showAlert('info', 'Excel export feature is not yet implemented.');
+}
+window.exportComparisonExcel = exportComparisonExcel;
+
+function saveFilledData() {
+    if (!comparisonResult) {
+        showAlert('error', 'No comparison results to save.');
+        return;
+    }
+    
+    // Create filled data object
+    const filledData = {};
+    comparisonResult.fields.forEach(field => {
+        if (field.source_value) {
+            filledData[field.field_name] = field.source_value;
+        } else if (field.calculator_value && (field.status === 'can_fill' || field.status === 'missing')) {
+            filledData[field.field_name] = field.calculator_value;
+        }
+    });
+    
+    // Save as new record
+    const recordName = `${currentSourceData.name} (Filled)`;
+    
+    fetch('/api/save-filled-data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            name: recordName,
+            product_type: currentSourceData.product_type,
+            calculator_path: document.getElementById('calculatorPath').value,
+            filled_data: filledData,
+            source_record_id: currentSourceData.id
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', `Filled data saved as new record (ID: ${data.record_id}).`);
+        } else {
+            showAlert('error', 'Error saving filled data: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('error', 'Error saving filled data. Please try again.');
+    });
+}
+window.saveFilledData = saveFilledData;
+
+function updateFieldValue() {
+    const input = document.getElementById('newFieldValue');
+    if (!input) return;
+    
+    const fieldName = input.dataset.field;
+    const newValue = input.value;
+    
+    // Update the comparison result
+    const field = comparisonResult.fields.find(f => f.field_name === fieldName);
+    if (field) {
+        field.source_value = newValue;
+        field.status = 'updated';
+    }
+    
+    // Close modal and refresh display
+    bootstrap.Modal.getInstance(document.getElementById('fieldDetailsModal')).hide();
+    displayComparisonResults(comparisonResult);
+    
+    showAlert('success', `Field "${fieldName}" updated successfully.`);
+}
+window.updateFieldValue = updateFieldValue;
+
+function showFieldDetails(fieldName) {
+    const field = comparisonResult.fields.find(f => f.field_name === fieldName);
+    if (!field) return;
+    
+    const modalBody = document.getElementById('fieldDetailsBody');
+    modalBody.innerHTML = `
+        <div class="row">
+            <div class="col-12">
+                <h6>Field: ${field.field_name}</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Source Value:</strong></td>
+                        <td>${field.source_value || '<em>Not provided</em>'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Calculator Value:</strong></td>
+                        <td>${field.calculator_value || '<em>Not available</em>'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td>${field.status}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Type:</strong></td>
+                        <td>${field.data_type || 'Unknown'}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        ${field.status === 'can_fill' || field.status === 'missing' ? `
+        <div class="row">
+            <div class="col-12">
+                <label for="newFieldValue" class="form-label">Update Value:</label>
+                <input type="text" class="form-control" id="newFieldValue" 
+                       value="${field.calculator_value || ''}" data-field="${field.field_name}">
+            </div>
+        </div>
+        ` : ''}
+    `;
+    
+    new bootstrap.Modal(document.getElementById('fieldDetailsModal')).show();
+}
+window.showFieldDetails = showFieldDetails;
+
+// Utility functions for UI feedback
+function showLoading() {
+    // You can add a loading spinner here
+    const loadingElement = document.getElementById('loadingIndicator');
+    if (loadingElement) {
+        loadingElement.style.display = 'block';
+    } else {
+        // Create a simple loading indicator
+        const loading = document.createElement('div');
+        loading.id = 'loadingIndicator';
+        loading.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Processing...</div>';
+        document.body.appendChild(loading);
+    }
+}
+
+function hideLoading() {
+    const loadingElement = document.getElementById('loadingIndicator');
+    if (loadingElement) {
+        loadingElement.style.display = 'none';
+    }
+}
+
+function showAlert(type, message) {
+    console.log(`Alert [${type}]: ${message}`);
+    // Create Bootstrap alert
+    const alertClass = type === 'error' ? 'alert-danger' : type === 'success' ? 'alert-success' : 'alert-info';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Find a container to show the alert (try to find an existing alert container)
+    let alertContainer = document.querySelector('.alert-container');
+    if (!alertContainer) {
+        // Create alert container at the top of the main content
+        alertContainer = document.createElement('div');
+        alertContainer.className = 'alert-container mb-3';
+        const mainContent = document.querySelector('.container-fluid') || document.body;
+        mainContent.insertBefore(alertContainer, mainContent.firstChild);
+    }
+    
+    alertContainer.innerHTML = alertHtml;
+    
+    // Auto-dismiss after 5 seconds for success messages
+    if (type === 'success') {
+        setTimeout(() => {
+            const alert = alertContainer.querySelector('.alert');
+            if (alert) {
+                alert.remove();
+            }
+        }, 5000);
+    }
+}
+
+function displayComparisonResults(comparisonData) {
+    console.log('Displaying comparison results:', comparisonData);
+    
+    // Display summary stats
+    const summaryStats = document.getElementById('summaryStats');
+    if (summaryStats && comparisonData.stats) {
+        const stats = comparisonData.stats;
+        summaryStats.innerHTML = `
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">${stats.total_fields}</h5>
+                        <p class="card-text">Total Fields</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">${stats.matching_fields}</h5>
+                        <p class="card-text">Matching</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">${stats.missing_fields}</h5>
+                        <p class="card-text">Missing</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">${stats.completion_percentage}%</h5>
+                        <p class="card-text">Complete</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Display detailed comparison table
+    const tableBody = document.getElementById('comparisonTableBody');
+    if (tableBody && comparisonData.fields) {
+        tableBody.innerHTML = comparisonData.fields.map(field => {
+            const statusBadge = {
+                'match': 'badge bg-success',
+                'mismatch': 'badge bg-warning',
+                'missing': 'badge bg-danger',
+                'can_fill': 'badge bg-info'
+            }[field.status] || 'badge bg-secondary';
+            
+            return `
+                <tr>
+                    <td><strong>${field.field_name}</strong></td>
+                    <td>${field.source_value || '<em>Not set</em>'}</td>
+                    <td>${field.calculator_value || '<em>No default</em>'}</td>
+                    <td>
+                        ${field.values_match ? 
+                            '<i class="fas fa-check text-success"></i>' : 
+                            '<i class="fas fa-times text-danger"></i>'
+                        }
+                    </td>
+                    <td><span class="${statusBadge}">${field.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showFieldDetails('${field.field_name}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+}
+
+// Attach utility functions to window
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;
+window.showAlert = showAlert;
+window.displayComparisonResults = displayComparisonResults;
+console.log('Utility functions defined and attached to window');
+
+// Debugging: Log when scripts block is executed
+console.log('Scripts block executed');
+
+// Debug: Check that all required functions are available
+const requiredFunctions = [
+    'uploadNewJSON', 'uploadCalculator', 'showCalculatorHelp', 
+    'setCalculator', 'loadSourceData', 'performComparison',
+    'exportComparison', 'exportComparisonExcel', 'saveFilledData',
+    'updateFieldValue', 'showFieldDetails', 'submitJSONUpload'
+];
+
+requiredFunctions.forEach(funcName => {
+    if (typeof window[funcName] !== 'function') {
+        console.error(`Function ${funcName} is not available on window object`);
+    } else {
+        console.log(`Function ${funcName} is available`);
+    }
+});
+</script>
+{% endblock %}

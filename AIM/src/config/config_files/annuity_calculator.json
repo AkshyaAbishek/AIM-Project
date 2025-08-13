@@ -1,0 +1,214 @@
+{
+    "name": "Fixed Annuity Calculator",
+    "description": "Fixed annuity premium and benefit calculations with guaranteed rates",
+    "version": "1.5",
+    "product_type": "annuity",
+    "fields": {
+        "contract_number": {
+            "type": "string",
+            "required": true,
+            "description": "Unique contract identifier",
+            "sample": "ANN789012",
+            "validation": "^ANN[0-9]{6}$"
+        },
+        "owner_first_name": {
+            "type": "string",
+            "required": true,
+            "description": "Contract owner's first name",
+            "sample": "Jane"
+        },
+        "owner_last_name": {
+            "type": "string",
+            "required": true,
+            "description": "Contract owner's last name",
+            "sample": "Smith"
+        },
+        "owner_age": {
+            "type": "number",
+            "required": true,
+            "description": "Contract owner's age at effective date",
+            "sample": 55,
+            "min": 18,
+            "max": 85,
+            "formula": "CALCULATE_AGE($birth_date, $effective_date)"
+        },
+        "birth_date": {
+            "type": "date",
+            "required": false,
+            "description": "Owner's birth date",
+            "sample": "1969-08-12",
+            "format": "YYYY-MM-DD"
+        },
+        "effective_date": {
+            "type": "date",
+            "required": true,
+            "description": "Contract effective date",
+            "sample": "2025-01-01",
+            "format": "YYYY-MM-DD"
+        },
+        "initial_premium": {
+            "type": "currency",
+            "required": true,
+            "description": "Initial premium deposit",
+            "sample": 50000,
+            "min": 5000,
+            "max": 1000000
+        },
+        "guaranteed_rate": {
+            "type": "number",
+            "required": true,
+            "description": "Guaranteed interest rate as decimal",
+            "sample": 0.025,
+            "min": 0.01,
+            "max": 0.10,
+            "formula": "LOOKUP_GUARANTEED_RATE($product_code, $effective_date)"
+        },
+        "current_rate": {
+            "type": "number",
+            "required": false,
+            "description": "Current interest rate as decimal",
+            "sample": 0.045,
+            "formula": "LOOKUP_CURRENT_RATE($product_code, $effective_date)"
+        },
+        "surrender_period": {
+            "type": "number",
+            "required": true,
+            "description": "Surrender charge period in years",
+            "sample": 7,
+            "min": 0,
+            "max": 15
+        },
+        "surrender_schedule": {
+            "type": "array",
+            "required": false,
+            "description": "Surrender charge schedule by year",
+            "sample": [0.07, 0.06, 0.05, 0.04, 0.03, 0.02, 0.01],
+            "formula": "GENERATE_SURRENDER_SCHEDULE($surrender_period, $product_code)"
+        },
+        "account_value": {
+            "type": "currency",
+            "required": false,
+            "description": "Current account value",
+            "sample": 52500,
+            "formula": "CALCULATE_ACCOUNT_VALUE($initial_premium, $guaranteed_rate, $contract_year, $effective_date)"
+        },
+        "surrender_value": {
+            "type": "currency",
+            "required": false,
+            "description": "Current surrender value",
+            "sample": 49000,
+            "formula": "CALCULATE_SURRENDER_VALUE($account_value, $surrender_charge, $contract_year)"
+        },
+        "contract_year": {
+            "type": "number",
+            "required": false,
+            "description": "Contract year (calculated from effective date)",
+            "sample": 1,
+            "formula": "CALCULATE_CONTRACT_YEAR($effective_date, CURRENT_DATE())"
+        },
+        "annuitization_date": {
+            "type": "date",
+            "required": false,
+            "description": "Date when annuity payments begin",
+            "sample": "2035-01-01",
+            "format": "YYYY-MM-DD"
+        },
+        "monthly_income": {
+            "type": "currency",
+            "required": false,
+            "description": "Monthly annuity payment amount",
+            "sample": 285,
+            "formula": "CALCULATE_MONTHLY_INCOME($account_value, $owner_age, $annuitization_date)"
+        },
+        "state_issued": {
+            "type": "string",
+            "required": true,
+            "description": "State where contract is issued",
+            "sample": "FL",
+            "validation": "^[A-Z]{2}$"
+        },
+        "agent_code": {
+            "type": "string",
+            "required": true,
+            "description": "Agent identification code",
+            "sample": "AGT002",
+            "validation": "^AGT[0-9]{3}$"
+        },
+        "commission_rate": {
+            "type": "number",
+            "required": false,
+            "description": "Agent commission rate as decimal",
+            "sample": 0.065,
+            "formula": "LOOKUP_COMMISSION_RATE($product_code, $state_issued, $effective_date)"
+        }
+    },
+    "calculations": {
+        "age_calculation": {
+            "description": "Calculate age from birth date and effective date",
+            "formula": "FLOOR(DAYS_BETWEEN($birth_date, $effective_date) / 365.25)",
+            "triggers": ["birth_date", "effective_date"]
+        },
+        "account_value_calculation": {
+            "description": "Calculate account value with guaranteed interest",
+            "formula": "$initial_premium * POWER(1 + $guaranteed_rate, $contract_year)",
+            "triggers": ["initial_premium", "guaranteed_rate", "contract_year", "effective_date"]
+        },
+        "surrender_charge_calculation": {
+            "description": "Calculate surrender charge based on contract year",
+            "formula": "$account_value * SURRENDER_RATE[$contract_year]",
+            "triggers": ["account_value", "contract_year", "surrender_schedule"]
+        },
+        "surrender_value_calculation": {
+            "description": "Calculate net surrender value",
+            "formula": "$account_value - $surrender_charge",
+            "triggers": ["account_value", "surrender_charge"]
+        },
+        "income_calculation": {
+            "description": "Calculate monthly annuity income",
+            "payout_factors": {
+                "age_55": 0.0055,
+                "age_60": 0.0062,
+                "age_65": 0.0071,
+                "age_70": 0.0083,
+                "age_75": 0.0098
+            },
+            "formula": "$account_value * PAYOUT_FACTOR",
+            "triggers": ["account_value", "owner_age", "annuitization_date"]
+        },
+        "commission_calculation": {
+            "description": "Calculate agent commission",
+            "formula": "$initial_premium * $commission_rate",
+            "triggers": ["initial_premium", "commission_rate"]
+        }
+    },
+    "validations": {
+        "age_range": {
+            "field": "owner_age",
+            "min": 18,
+            "max": 85,
+            "message": "Owner age must be between 18 and 85"
+        },
+        "premium_range": {
+            "field": "initial_premium",
+            "min": 5000,
+            "max": 1000000,
+            "message": "Initial premium must be between $5,000 and $1,000,000"
+        },
+        "rate_reasonableness": {
+            "formula": "$guaranteed_rate >= 0.01 AND $guaranteed_rate <= 0.10",
+            "message": "Guaranteed rate must be between 1% and 10%"
+        }
+    },
+    "guaranteed_rates": {
+        "2025": 0.025,
+        "2024": 0.030,
+        "2023": 0.035,
+        "default": 0.025
+    },
+    "current_rates": {
+        "2025": 0.045,
+        "2024": 0.050,
+        "2023": 0.055,
+        "default": 0.040
+    }
+}

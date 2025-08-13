@@ -1,0 +1,810 @@
+{% extends "base.html" %}
+
+{% block title %}AIM - Field Mapping{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-6">
+                <i class="fas fa-project-diagram me-3" style="color: var(--primary-color);"></i>
+                Field Mapping
+                <a href="{{ url_for('help_page') }}#collapseMapping" class="btn btn-outline-info btn-sm ms-3" 
+                   data-bs-toggle="tooltip" title="Get help with field mapping">
+                    <i class="fas fa-question-circle"></i>
+                </a>
+            </h1>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-home me-2"></i>Dashboard
+                </a>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-download me-2"></i>Templates
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><h6 class="dropdown-header">Quick Templates</h6></li>
+                        <li><a class="dropdown-item" href="#" onclick="createSampleTemplate('life_insurance')">
+                            <i class="fas fa-heart me-2"></i>Life Insurance
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="createSampleTemplate('annuity')">
+                            <i class="fas fa-coins me-2"></i>Annuity
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Download</h6></li>
+                        <li><a class="dropdown-item" href="/download-template/life_insurance" target="_blank">
+                            <i class="fas fa-download me-2"></i>Life Insurance (JSON)
+                        </a></li>
+                        <li><a class="dropdown-item" href="/download-template/annuity" target="_blank">
+                            <i class="fas fa-download me-2"></i>Annuity (JSON)
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="downloadExcelTemplate('life_insurance')">
+                            <i class="fas fa-file-excel me-2"></i>Life Insurance (Excel)
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="downloadExcelTemplate('annuity')">
+                            <i class="fas fa-file-excel me-2"></i>Annuity (Excel)
+                        </a></li>
+                    </ul>
+                </div>
+                <button type="button" class="btn btn-warning" onclick="triggerFileUpload()">
+                    <i class="fas fa-upload me-2"></i>Import Template
+                </button>
+                <button type="button" class="btn btn-success" onclick="saveMapping()">
+                    <i class="fas fa-save me-2"></i>Save Mapping
+                </button>
+                <input type="file" id="templateFileInput" accept=".json,.xlsx,.csv" style="display: none;" onchange="handleFileUpload(event)">
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Basic Configuration -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="mappingName" class="form-label">Mapping Name</label>
+                        <input type="text" class="form-control" id="mappingName" placeholder="Enter mapping name" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="productType" class="form-label">Product Type</label>
+                        <select class="form-select" id="productType" required>
+                            <option value="">Select product type</option>
+                            <option value="life_insurance">Life Insurance</option>
+                            <option value="annuity">Annuity</option>
+                            <option value="health_insurance">Health Insurance</option>
+                            <option value="property_casualty">Property & Casualty</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="mappingDescription" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="mappingDescription" placeholder="Brief description">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Saved Mappings -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-folder-open me-2"></i>Saved Mappings
+                </h5>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadSavedMappings()">
+                    <i class="fas fa-sync me-2"></i>Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="savedMappingsContainer">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Loading saved mappings...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Field Mapping Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-exchange-alt me-2"></i>Field Mappings
+                </h5>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addMappingRow()">
+                    <i class="fas fa-plus me-2"></i>Add Field
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 30%;">Source Field</th>
+                                <th style="width: 30%;">Target Field</th>
+                                <th style="width: 20%;">Transform</th>
+                                <th style="width: 10%;">Required</th>
+                                <th style="width: 10%;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mappingTableBody">
+                            <!-- Sample row -->
+                            <tr class="mapping-row">
+                                <td>
+                                    <input type="text" class="form-control source-field" placeholder="e.g., PolicyNumber">
+                                </td>
+                                <td>
+                                    <select class="form-select target-field">
+                                        <option value="">Select target</option>
+                                        <option value="policy_number">Policy Number</option>
+                                        <option value="contract_number">Contract Number</option>
+                                        <option value="insured_name">Insured Name</option>
+                                        <option value="owner_name">Owner Name</option>
+                                        <option value="birth_date">Birth Date</option>
+                                        <option value="gender">Gender</option>
+                                        <option value="coverage_amount">Coverage Amount</option>
+                                        <option value="premium_amount">Premium Amount</option>
+                                        <option value="effective_date">Effective Date</option>
+                                        <option value="product_code">Product Code</option>
+                                        <option value="beneficiary_name">Beneficiary</option>
+                                        <option value="agent_code">Agent Code</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select transformation">
+                                        <option value="none">None</option>
+                                        <option value="uppercase">Upper</option>
+                                        <option value="lowercase">Lower</option>
+                                        <option value="date_format">Date</option>
+                                        <option value="currency_format">Currency</option>
+                                        <option value="trim">Trim</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input required-field" type="checkbox">
+                                    </div>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeMappingRow(this)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+console.log('Field mapping page script started loading...');
+
+// Ensure all functions are available immediately
+let pageReady = false;
+
+// Simplified mapping management
+function addMappingRow() {
+    const tbody = document.getElementById('mappingTableBody');
+    if (!tbody) {
+        console.error('mappingTableBody not found');
+        return;
+    }
+    const newRow = tbody.rows[0].cloneNode(true);
+    
+    // Clear input values
+    newRow.querySelectorAll('input').forEach(input => input.value = '');
+    newRow.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+    newRow.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
+    
+    tbody.appendChild(newRow);
+}
+
+function removeMappingRow(button) {
+    const row = button.closest('tr');
+    const tbody = row.parentNode;
+    if (tbody.rows.length > 1) {
+        row.remove();
+    } else {
+        alert('At least one mapping row is required.');
+    }
+}
+
+// File upload functions for importing templates
+function triggerFileUpload() {
+    console.log('triggerFileUpload called');
+    const fileInput = document.getElementById('templateFileInput');
+    if (fileInput) {
+        console.log('File input found, triggering click');
+        try {
+            fileInput.click();
+            console.log('File input click triggered successfully');
+        } catch (error) {
+            console.error('Error triggering file input click:', error);
+            showAlert('error', 'Error opening file dialog. Please try again.');
+        }
+    } else {
+        console.error('templateFileInput element not found');
+        showAlert('error', 'File input element not found. Please refresh the page.');
+    }
+}
+
+// Save mapping configuration
+function saveMapping() {
+    // Get basic configuration
+    const mappingName = document.getElementById('mappingName').value.trim();
+    const productType = document.getElementById('productType').value;
+    const description = document.getElementById('mappingDescription').value.trim();
+    
+    // Validate required fields
+    if (!mappingName) {
+        showAlert('error', 'Please enter a mapping name.');
+        document.getElementById('mappingName').focus();
+        return;
+    }
+    
+    if (!productType) {
+        showAlert('error', 'Please select a product type.');
+        document.getElementById('productType').focus();
+        return;
+    }
+    
+    // Collect field mappings
+    const mappings = [];
+    const rows = document.querySelectorAll('#mappingTableBody .mapping-row');
+    
+    let hasValidMapping = false;
+    for (let row of rows) {
+        const sourceField = row.querySelector('.source-field').value.trim();
+        const targetField = row.querySelector('.target-field').value;
+        const transformation = row.querySelector('.transformation').value;
+        const required = row.querySelector('.required-field').checked;
+        
+        if (sourceField && targetField) {
+            mappings.push({
+                source: sourceField,
+                target: targetField,
+                transformation: transformation,
+                required: required
+            });
+            hasValidMapping = true;
+        }
+    }
+    
+    if (!hasValidMapping) {
+        showAlert('error', 'Please add at least one valid field mapping (both source and target fields are required).');
+        return;
+    }
+    
+    // Prepare data for API
+    const mappingData = {
+        name: mappingName,
+        product_type: productType,
+        description: description,
+        mappings: mappings
+    };
+    
+    // Show saving indicator
+    const saveButton = event.target;
+    const originalText = saveButton.innerHTML;
+    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+    saveButton.disabled = true;
+    
+    // Send to API
+    fetch('/api/save-mapping', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(mappingData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', `Mapping "${mappingName}" saved successfully! You can now reuse this mapping template.`);
+        } else {
+            showAlert('error', 'Error saving mapping: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error saving mapping:', error);
+        showAlert('error', 'Error saving mapping. Please try again.');
+    })
+    .finally(() => {
+        // Restore button
+        saveButton.innerHTML = originalText;
+        saveButton.disabled = false;
+    });
+}
+
+function handleFileUpload(event) {
+    console.log('handleFileUpload called');
+    
+    try {
+        const file = event.target.files[0];
+        if (!file) {
+            console.log('No file selected');
+            return;
+        }
+        
+        const fileName = file.name.toLowerCase();
+        console.log('Uploading file:', fileName, 'Size:', file.size, 'bytes');
+        
+        // Reset the file input for next use
+        event.target.value = '';
+        
+        if (fileName.endsWith('.json')) {
+            handleJSONUpload(file);
+        } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+            handleExcelUpload(file);
+        } else {
+            showAlert('error', 'Please upload a JSON or Excel file.');
+        }
+    } catch (error) {
+        console.error('Error in handleFileUpload:', error);
+        showAlert('error', 'Error processing the selected file.');
+    }
+}
+
+function handleJSONUpload(file) {
+    console.log('Processing JSON file:', file.name);
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const templateData = JSON.parse(e.target.result);
+            console.log('JSON template data:', templateData);
+            loadTemplateData(templateData);
+            showAlert('success', 'JSON template loaded successfully!');
+        } catch (error) {
+            console.error('Error parsing JSON:', error);
+            showAlert('error', 'Invalid JSON file. Please check the file format.');
+        }
+    };
+    reader.readAsText(file);
+}
+
+function handleExcelUpload(file) {
+    console.log('Processing Excel file:', file.name);
+    // For Excel files, we'll upload to server for processing
+    const formData = new FormData();
+    formData.append('template_file', file);
+    
+    // Show loading indicator
+    showAlert('info', 'Processing Excel file...');
+    
+    fetch('/api/upload-template', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Excel template processed:', data.template_data);
+            loadTemplateData(data.template_data);
+            showAlert('success', data.message);
+        } else {
+            console.error('Excel processing error:', data.message);
+            showAlert('error', 'Error processing Excel file: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error uploading Excel file:', error);
+        showAlert('error', 'Error uploading Excel file.');
+    });
+}
+
+function loadTemplateData(templateData) {
+    // Populate form fields
+    document.getElementById('mappingName').value = templateData.name || '';
+    document.getElementById('productType').value = templateData.product_type || '';
+    document.getElementById('mappingDescription').value = templateData.description || '';
+    
+    // Clear existing mapping rows
+    const tbody = document.getElementById('mappingTableBody');
+    tbody.innerHTML = '';
+    
+    // Add mapping rows from template
+    const mappings = templateData.field_mappings || templateData.mappings || [];
+    mappings.forEach(field => {
+        const row = document.createElement('tr');
+        row.className = 'mapping-row';
+        row.innerHTML = `
+            <td><input type="text" class="form-control source-field" value="${field.source || ''}"></td>
+            <td>
+                <select class="form-select target-field">
+                    <option value="">Select target</option>
+                    <option value="policy_number" ${field.target === 'policy_number' ? 'selected' : ''}>Policy Number</option>
+                    <option value="contract_number" ${field.target === 'contract_number' ? 'selected' : ''}>Contract Number</option>
+                    <option value="insured_name" ${field.target === 'insured_name' ? 'selected' : ''}>Insured Name</option>
+                    <option value="owner_name" ${field.target === 'owner_name' ? 'selected' : ''}>Owner Name</option>
+                    <option value="birth_date" ${field.target === 'birth_date' ? 'selected' : ''}>Birth Date</option>
+                    <option value="gender" ${field.target === 'gender' ? 'selected' : ''}>Gender</option>
+                    <option value="coverage_amount" ${field.target === 'coverage_amount' ? 'selected' : ''}>Coverage Amount</option>
+                    <option value="premium_amount" ${field.target === 'premium_amount' ? 'selected' : ''}>Premium Amount</option>
+                    <option value="effective_date" ${field.target === 'effective_date' ? 'selected' : ''}>Effective Date</option>
+                    <option value="product_code" ${field.target === 'product_code' ? 'selected' : ''}>Product Code</option>
+                    <option value="beneficiary_name" ${field.target === 'beneficiary_name' ? 'selected' : ''}>Beneficiary</option>
+                    <option value="agent_code" ${field.target === 'agent_code' ? 'selected' : ''}>Agent Code</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-select transformation">
+                    <option value="none" ${field.transformation === 'none' ? 'selected' : ''}>None</option>
+                    <option value="uppercase" ${field.transformation === 'uppercase' ? 'selected' : ''}>Upper</option>
+                    <option value="lowercase" ${field.transformation === 'lowercase' ? 'selected' : ''}>Lower</option>
+                    <option value="date_format" ${field.transformation === 'date_format' ? 'selected' : ''}>Date</option>
+                    <option value="currency_format" ${field.transformation === 'currency_format' ? 'selected' : ''}>Currency</option>
+                    <option value="trim" ${field.transformation === 'trim' ? 'selected' : ''}>Trim</option>
+                </select>
+            </td>
+            <td>
+                <div class="form-check">
+                    <input class="form-check-input required-field" type="checkbox" ${field.required ? 'checked' : ''}>
+                </div>
+            </td>
+            <td>
+                <button type="button" class="btn btn-outline-danger btn-sm delete-row-btn" data-action="delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    showAlert('success', `Template "${templateData.name || 'Unknown'}" imported successfully! ${mappings.length} field mappings loaded.`);
+}
+
+// Create sample template
+function createSampleTemplate(productType) {
+    const mappingName = document.getElementById('mappingName');
+    const productTypeSelect = document.getElementById('productType');
+    const description = document.getElementById('mappingDescription');
+    const tbody = document.getElementById('mappingTableBody');
+    
+    // Set basic info
+    productTypeSelect.value = productType;
+    
+    let templateName, templateDescription, sampleFields;
+    
+    if (productType === 'life_insurance') {
+        templateName = 'Life Insurance Mapping';
+        templateDescription = 'Standard life insurance field mapping';
+        sampleFields = [
+            { source: 'PolicyNumber', target: 'policy_number', transformation: 'trim', required: true },
+            { source: 'InsuredName', target: 'insured_name', transformation: 'trim', required: true },
+            { source: 'DateOfBirth', target: 'birth_date', transformation: 'date_format', required: true },
+            { source: 'Gender', target: 'gender', transformation: 'uppercase', required: true },
+            { source: 'CoverageAmount', target: 'coverage_amount', transformation: 'currency_format', required: true }
+        ];
+    } else if (productType === 'annuity') {
+        templateName = 'Annuity Mapping';
+        templateDescription = 'Standard annuity field mapping';
+        sampleFields = [
+            { source: 'ContractNumber', target: 'contract_number', transformation: 'trim', required: true },
+            { source: 'OwnerName', target: 'owner_name', transformation: 'trim', required: true },
+            { source: 'DateOfBirth', target: 'birth_date', transformation: 'date_format', required: true },
+            { source: 'InitialDeposit', target: 'coverage_amount', transformation: 'currency_format', required: true },
+            { source: 'ProductCode', target: 'product_code', transformation: 'uppercase', required: true }
+        ];
+    }
+    
+    // Set form values
+    mappingName.value = templateName;
+    description.value = templateDescription;
+    
+    // Clear existing mapping rows
+    tbody.innerHTML = '';
+    
+    // Add sample mapping rows
+    sampleFields.forEach(field => {
+        const row = document.createElement('tr');
+        row.className = 'mapping-row';
+        row.innerHTML = `
+            <td><input type="text" class="form-control source-field" value="${field.source}"></td>
+            <td>
+                <select class="form-select target-field">
+                    <option value="">Select target</option>
+                    <option value="policy_number" ${field.target === 'policy_number' ? 'selected' : ''}>Policy Number</option>
+                    <option value="contract_number" ${field.target === 'contract_number' ? 'selected' : ''}>Contract Number</option>
+                    <option value="insured_name" ${field.target === 'insured_name' ? 'selected' : ''}>Insured Name</option>
+                    <option value="owner_name" ${field.target === 'owner_name' ? 'selected' : ''}>Owner Name</option>
+                    <option value="birth_date" ${field.target === 'birth_date' ? 'selected' : ''}>Birth Date</option>
+                    <option value="gender" ${field.target === 'gender' ? 'selected' : ''}>Gender</option>
+                    <option value="coverage_amount" ${field.target === 'coverage_amount' ? 'selected' : ''}>Coverage Amount</option>
+                    <option value="premium_amount" ${field.target === 'premium_amount' ? 'selected' : ''}>Premium Amount</option>
+                    <option value="effective_date" ${field.target === 'effective_date' ? 'selected' : ''}>Effective Date</option>
+                    <option value="product_code" ${field.target === 'product_code' ? 'selected' : ''}>Product Code</option>
+                    <option value="beneficiary_name" ${field.target === 'beneficiary_name' ? 'selected' : ''}>Beneficiary</option>
+                    <option value="agent_code" ${field.target === 'agent_code' ? 'selected' : ''}>Agent Code</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-select transformation">
+                    <option value="none" ${field.transformation === 'none' ? 'selected' : ''}>None</option>
+                    <option value="uppercase" ${field.transformation === 'uppercase' ? 'selected' : ''}>Upper</option>
+                    <option value="lowercase" ${field.transformation === 'lowercase' ? 'selected' : ''}>Lower</option>
+                    <option value="date_format" ${field.transformation === 'date_format' ? 'selected' : ''}>Date</option>
+                    <option value="currency_format" ${field.transformation === 'currency_format' ? 'selected' : ''}>Currency</option>
+                    <option value="trim" ${field.transformation === 'trim' ? 'selected' : ''}>Trim</option>
+                </select>
+            </td>
+            <td>
+                <div class="form-check">
+                    <input class="form-check-input required-field" type="checkbox" ${field.required ? 'checked' : ''}>
+                </div>
+            </td>
+            <td>
+                <button type="button" class="btn btn-outline-danger btn-sm delete-row-btn" data-action="delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    showAlert('success', `${templateName} template loaded successfully!`);
+}
+
+// Download Excel template
+function downloadExcelTemplate(productType) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/create-mapping';
+    form.target = '_blank';
+    form.style.display = 'none';
+    
+    const productInput = document.createElement('input');
+    productInput.type = 'hidden';
+    productInput.name = 'product_type';
+    productInput.value = productType;
+    
+    form.appendChild(productInput);
+    document.body.appendChild(form);
+    
+    try {
+        form.submit();
+        showAlert('success', `${productType.replace('_', ' ').toUpperCase()} Excel template download started.`);
+    } catch (error) {
+        console.error('Error downloading template:', error);
+        showAlert('error', 'Error downloading Excel template.');
+    } finally {
+        setTimeout(() => {
+            if (document.body.contains(form)) {
+                document.body.removeChild(form);
+            }
+        }, 1000);
+    }
+}
+
+// Load and display saved mappings
+function loadSavedMappings() {
+    const container = document.getElementById('savedMappingsContainer');
+    container.innerHTML = '<div class="text-center text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Loading saved mappings...</div>';
+    
+    fetch('/api/mappings')
+        .then(response => response.json())
+        .then(data => {
+            if (data.mappings && data.mappings.length > 0) {
+                displaySavedMappings(data.mappings);
+            } else {
+                container.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-folder-open me-2"></i>
+                        No saved mappings found. Create and save a mapping to see it here.
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading saved mappings:', error);
+            container.innerHTML = `
+                <div class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error loading saved mappings. Please try again.
+                </div>
+            `;
+        });
+}
+
+function displaySavedMappings(mappings) {
+    const container = document.getElementById('savedMappingsContainer');
+    
+    if (mappings.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-folder-open me-2"></i>
+                No saved mappings found. Create and save a mapping to see it here.
+            </div>
+        `;
+        return;
+    }
+    
+    const mappingsHtml = mappings.map(mapping => `
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-file-alt me-2 text-primary"></i>
+                        ${mapping.name}
+                    </h6>
+                    <p class="card-text small text-muted mb-2">
+                        <strong>Type:</strong> ${mapping.product_type.replace('_', ' ').toUpperCase()}<br>
+                        <strong>Created:</strong> ${mapping.created_date ? new Date(mapping.created_date).toLocaleDateString() : 'Unknown'}
+                    </p>
+                    ${mapping.description ? `<p class="card-text small">${mapping.description}</p>` : ''}
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary btn-sm flex-fill" onclick="loadSavedMapping('${mapping.filename}')">
+                            <i class="fas fa-upload me-1"></i>Load
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSavedMapping('${mapping.filename}', '${mapping.name}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = `<div class="row">${mappingsHtml}</div>`;
+}
+
+function loadSavedMapping(filename) {
+    fetch(`/api/mappings/${encodeURIComponent(filename.replace('.json', ''))}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadTemplateData(data.mapping);
+                showAlert('success', `Mapping "${data.mapping.name}" loaded successfully!`);
+            } else {
+                showAlert('error', 'Error loading mapping: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading saved mapping:', error);
+            showAlert('error', 'Error loading mapping. Please try again.');
+        });
+}
+
+function deleteSavedMapping(filename, mappingName) {
+    if (!confirm(`Are you sure you want to delete the mapping "${mappingName}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    fetch(`/api/mappings/${encodeURIComponent(filename.replace('.json', ''))}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', `Mapping "${mappingName}" deleted successfully!`);
+            loadSavedMappings(); // Refresh the list
+        } else {
+            showAlert('error', 'Error deleting mapping: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting saved mapping:', error);
+        showAlert('error', 'Error deleting mapping. Please try again.');
+    });
+}
+
+// Helper function to show alerts
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    
+    // Map alert types to Bootstrap classes and icons
+    let alertClass, iconClass, labelText;
+    switch(type) {
+        case 'success':
+            alertClass = 'alert-success';
+            iconClass = 'fa-check-circle';
+            labelText = 'Success!';
+            break;
+        case 'info':
+            alertClass = 'alert-info';
+            iconClass = 'fa-info-circle';
+            labelText = 'Info:';
+            break;
+        case 'warning':
+            alertClass = 'alert-warning';
+            iconClass = 'fa-exclamation-triangle';
+            labelText = 'Warning:';
+            break;
+        case 'error':
+        default:
+            alertClass = 'alert-danger';
+            iconClass = 'fa-exclamation-circle';
+            labelText = 'Error!';
+            break;
+    }
+    
+    alertDiv.className = `alert ${alertClass} alert-dismissible fade show mt-3`;
+    alertDiv.innerHTML = `
+        <i class="fas ${iconClass} me-2"></i>
+        <strong>${labelText}</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const header = document.querySelector('.row .col-12');
+    if (header) {
+        header.appendChild(alertDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    } else {
+        console.error('Could not find header element to append alert');
+    }
+}
+
+// Attach all functions to window object for global access
+window.addMappingRow = addMappingRow;
+window.removeMappingRow = removeMappingRow;
+window.triggerFileUpload = triggerFileUpload;
+window.saveMapping = saveMapping;
+window.handleFileUpload = handleFileUpload;
+window.handleJSONUpload = handleJSONUpload;
+window.handleExcelUpload = handleExcelUpload;
+window.loadTemplateData = loadTemplateData;
+window.createSampleTemplate = createSampleTemplate;
+window.downloadExcelTemplate = downloadExcelTemplate;
+window.loadSavedMappings = loadSavedMappings;
+window.displaySavedMappings = displaySavedMappings;
+window.loadSavedMapping = loadSavedMapping;
+window.deleteSavedMapping = deleteSavedMapping;
+window.showAlert = showAlert;
+
+console.log('All functions attached to window object');
+
+// Load saved mappings when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - Field Mapping Page');
+    pageReady = true;
+    
+    // Verify critical elements exist
+    const fileInput = document.getElementById('templateFileInput');
+    const mappingTableBody = document.getElementById('mappingTableBody');
+    const importButton = document.querySelector('button[onclick="triggerFileUpload()"]');
+    
+    console.log('Critical elements check:');
+    console.log('- File input:', fileInput ? '✅ Found' : '❌ Missing');
+    console.log('- Mapping table body:', mappingTableBody ? '✅ Found' : '❌ Missing');
+    console.log('- Import button:', importButton ? '✅ Found' : '❌ Missing');
+    
+    console.log('Testing if functions are attached to window:');
+    console.log('- triggerFileUpload:', typeof window.triggerFileUpload);
+    console.log('- handleFileUpload:', typeof window.handleFileUpload);
+    console.log('- handleJSONUpload:', typeof window.handleJSONUpload);
+    console.log('- handleExcelUpload:', typeof window.handleExcelUpload);
+    console.log('- loadTemplateData:', typeof window.loadTemplateData);
+    console.log('- showAlert:', typeof window.showAlert);
+    
+    // Load saved mappings
+    loadSavedMappings();
+    
+    console.log('🎯 Field mapping page fully initialized and ready!');
+});
+</script>
+{% endblock %}

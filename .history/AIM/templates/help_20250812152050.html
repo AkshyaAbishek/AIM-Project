@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+
+{% block title %}AIM - Help & Documentation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-6">
+                <i class="fas fa-question-circle me-3" style="color: var(--primary-color);"></i>
+                Help & Documentation
+            </h1>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-home me-2"></i>Back to Dashboard
+                </a>
+                <button type="button" class="btn btn-outline-info" onclick="printHelp()">
+                    <i class="fas fa-print me-2"></i>Print Guide
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Start Guide -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-rocket me-2"></i>
+                    Quick Start Guide
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-upload text-success me-2"></i>1. Upload Your Data</h6>
+                        <p class="small mb-3">Start by uploading your actuarial data files (JSON, Excel, or CSV format). The system will automatically detect the structure and prepare it for processing.</p>
+                        
+                        <h6><i class="fas fa-map text-info me-2"></i>2. Create Field Mappings</h6>
+                        <p class="small mb-3">Define how your source data fields map to target actuarial fields. This ensures data consistency and proper formatting.</p>
+                        
+                        <h6><i class="fas fa-cogs text-warning me-2"></i>3. Process & Validate</h6>
+                        <p class="small mb-3">Run the processing engine to validate, transform, and standardize your data according to actuarial requirements.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-eye text-primary me-2"></i>4. Review Results</h6>
+                        <p class="small mb-3">Examine the processed data, quality scores, and validation results. Make adjustments if needed.</p>
+                        
+                        <h6><i class="fas fa-download text-secondary me-2"></i>5. Export Data</h6>
+                        <p class="small mb-3">Download your standardized data in various formats for use in actuarial models and systems.</p>
+                        
+                        <h6><i class="fas fa-chart-line text-danger me-2"></i>6. Monitor Quality</h6>
+                        <p class="small mb-3">Track data quality metrics and processing history to maintain high standards.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feature Documentation -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-book me-2"></i>
+                    Feature Documentation
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="helpAccordion">
+                    
+                    <!-- Dashboard Help -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="dashboardHelp">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard Overview
+                            </button>
+                        </h2>
+                        <div id="collapseDashboard" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <h6>Purpose:</h6>
+                                <p>The dashboard provides a comprehensive overview of your actuarial data processing activities.</p>
+                                
+                                <h6>Key Features:</h6>
+                                <ul>
+                                    <li><strong>Total Records:</strong> Shows the number of data records in your system</li>
+                                    <li><strong>Average Quality Score:</strong> Displays the overall data quality percentage</li>
+                                    <li><strong>Product Types:</strong> Number of different insurance product categories</li>
+                                    <li><strong>Product Distribution:</strong> Visual breakdown of data by product type</li>
+                                    <li><strong>Recent Activity:</strong> Latest processing activities and updates</li>
+                                </ul>
+                                
+                                <h6>Quick Actions:</h6>
+                                <p>Use the action buttons to quickly access Upload Data or Create Field Mappings.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Upload Help -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="uploadHelp">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUpload">
+                                <i class="fas fa-upload me-2"></i>Data Upload & Processing
+                            </button>
+                        </h2>
+                        <div id="collapseUpload" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <h6>Supported File Formats:</h6>
+                                <ul>
+                                    <li><strong>JSON (.json):</strong> Structured data format, preferred for complex actuarial data</li>
+                                    <li><strong>Excel (.xlsx, .xls):</strong> Spreadsheet format, automatically converts to JSON</li>
+                                    <li><strong>CSV (.csv):</strong> Comma-separated values, good for simple tabular data</li>
+                                </ul>
+                                
+                                <h6>File Requirements:</h6>
+                                <ul>
+                                    <li>Maximum file size: 16 MB</li>
+                                    <li>Files must contain actuarial data fields</li>
+                                    <li>Data should include policy information, demographics, or coverage details</li>
+                                </ul>
+                                
+                                <h6>Upload Process:</h6>
+                                <ol>
+                                    <li>Select your file using the file picker</li>
+                                    <li>Choose the product type (Life Insurance, Annuity, etc.)</li>
+                                    <li>Select or create a field mapping configuration</li>
+                                    <li>Click "Process Data" to begin validation and transformation</li>
+                                </ol>
+                                
+                                <h6>Batch Processing:</h6>
+                                <p>Enable "Batch Mode" to upload and process multiple files simultaneously.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Field Mapping Help -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="mappingHelp">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMapping">
+                                <i class="fas fa-map me-2"></i>Field Mapping Configuration
+                            </button>
+                        </h2>
+                        <div id="collapseMapping" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <h6>Purpose:</h6>
+                                <p>Field mapping defines how your source data fields correspond to standardized actuarial fields.</p>
+                                
+                                <h6>Template Creation:</h6>
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-magic me-2"></i>Quick Start Templates:</h6>
+                                    <ul>
+                                        <li><strong>Life Insurance Template:</strong> Pre-configured mappings for policy number, insured details, coverage amounts, and beneficiary information</li>
+                                        <li><strong>Annuity Template:</strong> Ready-to-use mappings for contract numbers, owner details, accumulation values, and annuitant information</li>
+                                        <li><strong>Custom Templates:</strong> Save your own mapping configurations for reuse</li>
+                                    </ul>
+                                    <p class="mb-0"><strong>How to use:</strong> Click "Create Template" → Select product type → Template auto-populates with standard fields you can customize.</p>
+                                </div>
+                                
+                                <h6>Saved Templates Management:</h6>
+                                <ul>
+                                    <li><strong>View Templates:</strong> Browse all saved mapping templates</li>
+                                    <li><strong>Load Template:</strong> Apply a previously saved template to current mapping</li>
+                                    <li><strong>Save Custom:</strong> Store your configured mappings for future use</li>
+                                    <li><strong>Template Library:</strong> Access industry-standard mapping configurations</li>
+                                </ul>
+                                
+                                <h6>Mapping Configuration:</h6>
+                                <ul>
+                                    <li><strong>Mapping Name:</strong> Descriptive name for your mapping configuration</li>
+                                    <li><strong>Product Type:</strong> Insurance product category this mapping applies to</li>
+                                    <li><strong>Source System:</strong> Origin system or format of your data</li>
+                                    <li><strong>Description:</strong> Additional details about this mapping</li>
+                                </ul>
+                                
+                                <h6>Field Mappings:</h6>
+                                <ul>
+                                    <li><strong>Source Field:</strong> Original field name in your data</li>
+                                    <li><strong>Target Field:</strong> Standardized actuarial field name</li>
+                                    <li><strong>Transformation:</strong> Data conversion rules (uppercase, date format, etc.)</li>
+                                    <li><strong>Required:</strong> Whether this field is mandatory for processing</li>
+                                </ul>
+                                
+                                <h6>Validation Rules:</h6>
+                                <ul>
+                                    <li><strong>Required:</strong> Field must have a value</li>
+                                    <li><strong>Format Check:</strong> Data must match specific format (date, currency, etc.)</li>
+                                    <li><strong>Range Validation:</strong> Numeric values must fall within specified range</li>
+                                    <li><strong>Length Check:</strong> Text fields must meet length requirements</li>
+                                    <li><strong>Regex Pattern:</strong> Advanced pattern matching for complex validation</li>
+                                </ul>
+                                
+                                <h6>Sample Data Analysis:</h6>
+                                <p>Upload a sample file to auto-detect fields and create mappings automatically.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Viewer Help -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="viewerHelp">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseViewer">
+                                <i class="fas fa-database me-2"></i>Data Viewer & Management
+                            </button>
+                        </h2>
+                        <div id="collapseViewer" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <h6>Data Filtering:</h6>
+                                <ul>
+                                    <li><strong>Product Type Filter:</strong> Show data for specific insurance products</li>
+                                    <li><strong>Date Range Filter:</strong> Filter by processing or effective dates</li>
+                                    <li><strong>Search:</strong> Find records containing specific text or values</li>
+                                    <li><strong>Quality Score Filter:</strong> Show records above/below quality thresholds</li>
+                                </ul>
+                                
+                                <h6>Data Actions:</h6>
+                                <ul>
+                                    <li><strong>View Details:</strong> See complete record information and processing history</li>
+                                    <li><strong>Edit Record:</strong> Modify individual data points (with validation)</li>
+                                    <li><strong>Delete Record:</strong> Remove records from the system</li>
+                                    <li><strong>Export Data:</strong> Download filtered data in various formats</li>
+                                </ul>
+                                
+                                <h6>Quality Indicators:</h6>
+                                <ul>
+                                    <li><strong>Green (80-100%):</strong> High quality, fully validated data</li>
+                                    <li><strong>Yellow (60-79%):</strong> Good quality with minor issues</li>
+                                    <li><strong>Red (0-59%):</strong> Low quality, requires attention</li>
+                                </ul>
+                                
+                                <h6>Status Meanings:</h6>
+                                <ul>
+                                    <li><strong>Processed:</strong> Successfully validated and transformed</li>
+                                    <li><strong>Pending:</strong> Awaiting processing or review</li>
+                                    <li><strong>Error:</strong> Processing failed, requires correction</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Export & Integration Help -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="exportHelp">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExport">
+                                <i class="fas fa-download me-2"></i>Export & Integration
+                            </button>
+                        </h2>
+                        <div id="collapseExport" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <h6>Export Formats:</h6>
+                                <ul>
+                                    <li><strong>JSON:</strong> Structured format for API integration</li>
+                                    <li><strong>Excel:</strong> Spreadsheet format for analysis and reporting</li>
+                                    <li><strong>CSV:</strong> Simple format for database imports</li>
+                                    <li><strong>XML:</strong> Standard format for system integration</li>
+                                </ul>
+                                
+                                <h6>Export Options:</h6>
+                                <ul>
+                                    <li><strong>All Data:</strong> Export complete dataset</li>
+                                    <li><strong>Filtered Data:</strong> Export only filtered/searched records</li>
+                                    <li><strong>Selected Records:</strong> Export specific records only</li>
+                                    <li><strong>Quality Reports:</strong> Export data quality analysis</li>
+                                </ul>
+                                
+                                <h6>Integration APIs:</h6>
+                                <p>REST APIs available for system integration. Contact administrator for API documentation and access credentials.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Troubleshooting -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Common Issues & Solutions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>File Upload Fails:</strong>
+                    <ul class="small">
+                        <li>Check file size (max 16MB)</li>
+                        <li>Verify file format is supported</li>
+                        <li>Ensure file is not corrupted</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Low Quality Scores:</strong>
+                    <ul class="small">
+                        <li>Review field mappings</li>
+                        <li>Check data completeness</li>
+                        <li>Verify validation rules</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Processing Errors:</strong>
+                    <ul class="small">
+                        <li>Check required fields are mapped</li>
+                        <li>Verify data formats match expectations</li>
+                        <li>Review transformation rules</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Best Practices
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Data Preparation:</strong>
+                    <ul class="small">
+                        <li>Clean data before upload</li>
+                        <li>Use consistent naming conventions</li>
+                        <li>Validate data completeness</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Field Mapping:</strong>
+                    <ul class="small">
+                        <li>Create reusable mapping templates</li>
+                        <li>Test with sample data first</li>
+                        <li>Document mapping decisions</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Quality Management:</strong>
+                    <ul class="small">
+                        <li>Monitor quality scores regularly</li>
+                        <li>Address validation errors promptly</li>
+                        <li>Maintain audit trails</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact & Support -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-headset me-2"></i>
+                    Contact & Support
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-envelope text-primary me-2"></i>Email Support</h6>
+                        <p class="small">support@yourcompany.com</p>
+                        <p class="small">Response time: 24-48 hours</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-phone text-success me-2"></i>Phone Support</h6>
+                        <p class="small">1-800-XXX-XXXX</p>
+                        <p class="small">Mon-Fri: 9 AM - 5 PM EST</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-globe text-info me-2"></i>Online Resources</h6>
+                        <p class="small">Knowledge Base: <a href="#">link</a></p>
+                        <p class="small">Video Tutorials: <a href="#">link</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function printHelp() {
+    window.print();
+}
+
+// Add smooth scrolling to anchor links
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-expand accordion item if URL has hash
+    const hash = window.location.hash;
+    if (hash) {
+        const target = document.querySelector(hash);
+        if (target && target.classList.contains('accordion-collapse')) {
+            new bootstrap.Collapse(target, { show: true });
+        }
+    }
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

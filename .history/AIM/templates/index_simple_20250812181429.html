@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIM Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .card { border: 1px solid #ddd; padding: 20px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>AIM Dashboard - Simple Test</h1>
+    
+    <div class="card">
+        <h2>Statistics</h2>
+        <p>Total Records: {{ stats.total_records }}</p>
+        <p>Average Quality: {{ stats.average_quality }}%</p>
+    </div>
+    
+    <div class="card">
+        <h2>Recent Data</h2>
+        <p>Count: {{ recent_data|length }}</p>
+        {% if recent_data %}
+            <ul>
+            {% for item in recent_data[:5] %}
+                <li>{{ item.name }} ({{ item.product_type }})</li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>No data available</p>
+        {% endif %}
+    </div>
+    
+    <div class="card">
+        <h2>Navigation</h2>
+        <a href="/upload">Upload Data</a> | 
+        <a href="/view-data">View Data</a> | 
+        <a href="/help">Help</a>
+    </div>
+</body>
+</html>

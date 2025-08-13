@@ -1,0 +1,92 @@
+{
+  "name": "Annuity Mapping Template",
+  "product_type": "annuity",
+  "description": "Standard field mapping template for annuity products including contract details, owner information, and accumulation values.",
+  "created_date": "2025-08-12T15:16:03.331556",
+  "field_mappings": [
+    {
+      "source": "ContractNumber",
+      "target": "contract_number",
+      "transformation": "trim",
+      "required": true
+    },
+    {
+      "source": "OwnerFirstName",
+      "target": "owner_first_name",
+      "transformation": "trim",
+      "required": true
+    },
+    {
+      "source": "OwnerLastName",
+      "target": "owner_last_name",
+      "transformation": "trim",
+      "required": true
+    },
+    {
+      "source": "DateOfBirth",
+      "target": "birth_date",
+      "transformation": "date_format",
+      "required": true
+    },
+    {
+      "source": "Gender",
+      "target": "gender",
+      "transformation": "uppercase",
+      "required": true
+    },
+    {
+      "source": "InitialDeposit",
+      "target": "initial_deposit",
+      "transformation": "currency_format",
+      "required": true
+    },
+    {
+      "source": "AccumulationValue",
+      "target": "accumulation_value",
+      "transformation": "currency_format",
+      "required": true
+    },
+    {
+      "source": "IssueDate",
+      "target": "issue_date",
+      "transformation": "date_format",
+      "required": true
+    },
+    {
+      "source": "ProductCode",
+      "target": "product_code",
+      "transformation": "uppercase",
+      "required": true
+    },
+    {
+      "source": "AnnuitantName",
+      "target": "annuitant_name",
+      "transformation": "trim",
+      "required": false
+    },
+    {
+      "source": "BeneficiaryName",
+      "target": "beneficiary_name",
+      "transformation": "trim",
+      "required": false
+    },
+    {
+      "source": "SurrenderChargeSchedule",
+      "target": "surrender_schedule",
+      "transformation": "none",
+      "required": false
+    },
+    {
+      "source": "InterestRate",
+      "target": "interest_rate",
+      "transformation": "none",
+      "required": false
+    }
+  ],
+  "usage_instructions": {
+    "step1": "Download this template file",
+    "step2": "Customize the field mappings for your data source",
+    "step3": "Upload to AIM field mapping page using the Load Template feature",
+    "step4": "Fine-tune mappings and validation rules as needed"
+  }
+}

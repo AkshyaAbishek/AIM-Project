@@ -1,0 +1,20 @@
+{
+  "name": "UI Test Mapping",
+  "product_type": "life_insurance",
+  "description": "Testing the UI save functionality",
+  "created_date": "2025-08-12T15:22:29.989999",
+  "field_mappings": [
+    {
+      "source": "PolicyNum",
+      "target": "policy_number",
+      "transformation": "trim",
+      "required": true
+    },
+    {
+      "source": "InsuredName",
+      "target": "insured_name",
+      "transformation": "trim",
+      "required": true
+    }
+  ]
+}

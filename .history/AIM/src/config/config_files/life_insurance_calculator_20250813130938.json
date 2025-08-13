@@ -1,0 +1,194 @@
+{
+    "name": "Life Insurance Standard Calculator",
+    "description": "Standard life insurance premium and benefit calculations",
+    "version": "2.1",
+    "product_type": "life",
+    "fields": {
+        "policy_number": {
+            "type": "string",
+            "required": true,
+            "description": "Unique policy identifier",
+            "sample": "POL123456",
+            "validation": "^POL[0-9]{6}$"
+        },
+        "applicant_first_name": {
+            "type": "string",
+            "required": true,
+            "description": "Applicant's first name",
+            "sample": "John"
+        },
+        "applicant_last_name": {
+            "type": "string",
+            "required": true,
+            "description": "Applicant's last name",
+            "sample": "Doe"
+        },
+        "applicant_age": {
+            "type": "number",
+            "required": true,
+            "description": "Applicant's age at policy effective date",
+            "sample": 35,
+            "min": 18,
+            "max": 85,
+            "formula": "CALCULATE_AGE($birth_date, $effective_date)"
+        },
+        "birth_date": {
+            "type": "date",
+            "required": false,
+            "description": "Applicant's birth date",
+            "sample": "1989-08-12",
+            "format": "YYYY-MM-DD"
+        },
+        "effective_date": {
+            "type": "date",
+            "required": true,
+            "description": "Policy effective date",
+            "sample": "2025-01-01",
+            "format": "YYYY-MM-DD"
+        },
+        "face_amount": {
+            "type": "currency",
+            "required": true,
+            "description": "Policy face amount (death benefit)",
+            "sample": 100000,
+            "min": 10000,
+            "max": 10000000
+        },
+        "premium_frequency": {
+            "type": "string",
+            "required": true,
+            "description": "Premium payment frequency",
+            "sample": "monthly",
+            "options": ["monthly", "quarterly", "semi-annual", "annual"]
+        },
+        "modal_premium": {
+            "type": "currency",
+            "required": false,
+            "description": "Premium amount per payment mode",
+            "sample": 500,
+            "formula": "CALCULATE_MODAL_PREMIUM($annual_premium, $premium_frequency)"
+        },
+        "annual_premium": {
+            "type": "currency",
+            "required": false,
+            "description": "Annual premium amount",
+            "sample": 6000,
+            "formula": "CALCULATE_ANNUAL_PREMIUM($face_amount, $applicant_age, $risk_class, $effective_date)"
+        },
+        "risk_class": {
+            "type": "string",
+            "required": true,
+            "description": "Underwriting risk classification",
+            "sample": "standard",
+            "options": ["preferred_plus", "preferred", "standard", "table_rated"]
+        },
+        "state_issued": {
+            "type": "string",
+            "required": true,
+            "description": "State where policy is issued",
+            "sample": "NY",
+            "validation": "^[A-Z]{2}$"
+        },
+        "agent_code": {
+            "type": "string",
+            "required": true,
+            "description": "Agent identification code",
+            "sample": "AGT001",
+            "validation": "^AGT[0-9]{3}$"
+        },
+        "commission_rate": {
+            "type": "number",
+            "required": false,
+            "description": "Agent commission rate as decimal",
+            "sample": 0.55,
+            "formula": "LOOKUP_COMMISSION_RATE($product_code, $state_issued, $effective_date)"
+        },
+        "cash_value": {
+            "type": "currency",
+            "required": false,
+            "description": "Policy cash value at effective date",
+            "sample": 0,
+            "formula": "CALCULATE_CASH_VALUE($face_amount, $annual_premium, $policy_year, $effective_date)"
+        },
+        "policy_year": {
+            "type": "number",
+            "required": false,
+            "description": "Policy year (calculated from effective date)",
+            "sample": 1,
+            "formula": "CALCULATE_POLICY_YEAR($effective_date, CURRENT_DATE())"
+        }
+    },
+    "calculations": {
+        "age_calculation": {
+            "description": "Calculate age from birth date and effective date",
+            "formula": "FLOOR(DAYS_BETWEEN($birth_date, $effective_date) / 365.25)",
+            "triggers": ["birth_date", "effective_date"]
+        },
+        "premium_calculation": {
+            "description": "Calculate annual premium based on face amount, age, and risk class",
+            "base_rate_per_1000": {
+                "preferred_plus": 0.85,
+                "preferred": 1.25,
+                "standard": 1.75,
+                "table_rated": 2.50
+            },
+            "age_factors": {
+                "18-25": 0.80,
+                "26-35": 1.00,
+                "36-45": 1.35,
+                "46-55": 1.85,
+                "56-65": 2.75,
+                "66-75": 4.50,
+                "76-85": 7.25
+            },
+            "formula": "($face_amount / 1000) * BASE_RATE * AGE_FACTOR * STATE_FACTOR",
+            "triggers": ["face_amount", "applicant_age", "risk_class", "state_issued"]
+        },
+        "modal_premium_calculation": {
+            "description": "Convert annual premium to modal premium",
+            "frequency_factors": {
+                "monthly": 0.0875,
+                "quarterly": 0.26,
+                "semi-annual": 0.51,
+                "annual": 1.0
+            },
+            "formula": "$annual_premium * FREQUENCY_FACTOR",
+            "triggers": ["annual_premium", "premium_frequency"]
+        },
+        "commission_calculation": {
+            "description": "Calculate agent commission",
+            "formula": "$annual_premium * $commission_rate",
+            "triggers": ["annual_premium", "commission_rate"]
+        },
+        "cash_value_calculation": {
+            "description": "Calculate policy cash value progression",
+            "formula": "($annual_premium * $policy_year * 0.75) - SURRENDER_CHARGES",
+            "triggers": ["annual_premium", "policy_year", "effective_date"]
+        }
+    },
+    "validations": {
+        "age_range": {
+            "field": "applicant_age",
+            "min": 18,
+            "max": 85,
+            "message": "Applicant age must be between 18 and 85"
+        },
+        "face_amount_range": {
+            "field": "face_amount",
+            "min": 10000,
+            "max": 10000000,
+            "message": "Face amount must be between $10,000 and $10,000,000"
+        },
+        "premium_reasonableness": {
+            "formula": "$annual_premium <= ($face_amount * 0.20)",
+            "message": "Annual premium cannot exceed 20% of face amount"
+        }
+    },
+    "state_factors": {
+        "NY": 1.15,
+        "CA": 1.10,
+        "TX": 1.05,
+        "FL": 1.08,
+        "default": 1.00
+    }
+}

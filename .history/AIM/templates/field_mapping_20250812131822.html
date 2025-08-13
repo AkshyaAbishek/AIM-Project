@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+
+{% block title %}Field Mapping - AIM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-6">
+                <i class="fas fa-map me-3" style="color: var(--primary-color);"></i>
+                Field Mapping
+                <a href="{{ url_for('help_page') }}#collapseMapping" class="btn btn-outline-info btn-sm ms-3" 
+                   data-bs-toggle="tooltip" title="Get help with field mapping">
+                    <i class="fas fa-question-circle"></i>
+                </a>
+            </h1>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-home me-2"></i>Dashboard
+                </a>
+                <button type="button" class="btn btn-success" onclick="saveMapping()">
+                    <i class="fas fa-save me-2"></i>Save Mapping
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mapping Configuration -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>
+                    Mapping Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="mappingConfigForm">
+                    <div class="mb-3">
+                        <label for="mappingName" class="form-label">Mapping Name</label>
+                        <input type="text" class="form-control" id="mappingName" placeholder="Enter mapping name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productType" class="form-label">Product Type</label>
+                        <select class="form-select" id="productType" required>
+                            <option value="">Select product type</option>
+                            <option value="life_insurance">Life Insurance</option>
+                            <option value="annuity">Annuity</option>
+                            <option value="health_insurance">Health Insurance</option>
+                            <option value="property_casualty">Property & Casualty</option>
+                            <option value="disability">Disability</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sourceSystem" class="form-label">Source System</label>
+                        <input type="text" class="form-control" id="sourceSystem" placeholder="e.g., FastUI, Legacy System">
+                    </div>
+                    <div class="mb-3">
+                        <label for="mappingDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="mappingDescription" rows="3" placeholder="Brief description of this mapping"></textarea>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-upload me-2"></i>
+                    Import Sample Data
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="sampleFile" class="form-label">Upload Sample File</label>
+                    <input type="file" class="form-control" id="sampleFile" accept=".json,.xlsx,.csv" onchange="loadSampleData()">
+                    <small class="form-text text-muted">Upload a sample file to auto-detect fields</small>
+                </div>
+                <div class="d-grid">
+                    <button type="button" class="btn btn-outline-primary" onclick="loadDefaultMapping()">
+                        <i class="fas fa-magic me-2"></i>Load Default Mapping
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Field Mapping Interface -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-exchange-alt me-2"></i>
+                    Field Mappings
+                </h5>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addMappingRow()">
+                    <i class="fas fa-plus me-2"></i>Add Mapping
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="mappingTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 30%;">Source Field</th>
+                                <th style="width: 30%;">Target Field</th>
+                                <th style="width: 20%;">Transformation</th>
+                                <th style="width: 15%;">Required</th>
+                                <th style="width: 5%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mappingTableBody">
+                            <!-- Default mapping rows -->
+                            <tr class="mapping-row">
+                                <td>
+                                    <input type="text" class="form-control source-field" placeholder="e.g., customer_name" value="">
+                                </td>
+                                <td>
+                                    <select class="form-select target-field">
+                                        <option value="">Select target field</option>
+                                        <option value="policy_number">Policy Number</option>
+                                        <option value="insured_name">Insured Name</option>
+                                        <option value="birth_date">Birth Date</option>
+                                        <option value="gender">Gender</option>
+                                        <option value="coverage_amount">Coverage Amount</option>
+                                        <option value="premium_amount">Premium Amount</option>
+                                        <option value="effective_date">Effective Date</option>
+                                        <option value="product_code">Product Code</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select transformation">
+                                        <option value="none">None</option>
+                                        <option value="uppercase">Uppercase</option>
+                                        <option value="lowercase">Lowercase</option>
+                                        <option value="date_format">Date Format</option>
+                                        <option value="currency_format">Currency Format</option>
+                                        <option value="remove_spaces">Remove Spaces</option>
+                                        <option value="trim">Trim Whitespace</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input required-field" type="checkbox">
+                                        <label class="form-check-label">Required</label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeMappingRow(this)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Validation Rules -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Validation Rules
+                </h5>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addValidationRule()">
+                    <i class="fas fa-plus me-2"></i>Add Rule
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="validationRules">
+                    <div class="validation-rule mb-3 p-3 border rounded">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Field</label>
+                                <select class="form-select rule-field">
+                                    <option value="">Select field</option>
+                                    <option value="policy_number">Policy Number</option>
+                                    <option value="insured_name">Insured Name</option>
+                                    <option value="birth_date">Birth Date</option>
+                                    <option value="coverage_amount">Coverage Amount</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Rule Type</label>
+                                <select class="form-select rule-type">
+                                    <option value="required">Required</option>
+                                    <option value="format">Format Check</option>
+                                    <option value="range">Range Validation</option>
+                                    <option value="length">Length Check</option>
+                                    <option value="regex">Regex Pattern</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Rule Value</label>
+                                <input type="text" class="form-control rule-value" placeholder="Enter rule parameter">
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-outline-danger w-100" onclick="removeValidationRule(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Mapping management functions
+function addMappingRow() {
+    const tbody = document.getElementById('mappingTableBody');
+    const newRow = tbody.rows[0].cloneNode(true);
+    
+    // Clear input values
+    newRow.querySelectorAll('input').forEach(input => input.value = '');
+    newRow.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+    newRow.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
+    
+    tbody.appendChild(newRow);
+}
+
+function removeMappingRow(button) {
+    const tbody = document.getElementById('mappingTableBody');
+    if (tbody.children.length > 1) {
+        button.closest('tr').remove();
+    } else {
+        alert('At least one mapping row is required.');
+    }
+}
+
+function addValidationRule() {
+    const container = document.getElementById('validationRules');
+    const newRule = container.children[0].cloneNode(true);
+    
+    // Clear input values
+    newRule.querySelectorAll('input').forEach(input => input.value = '');
+    newRule.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+    
+    container.appendChild(newRule);
+}
+
+function removeValidationRule(button) {
+    const container = document.getElementById('validationRules');
+    if (container.children.length > 1) {
+        button.closest('.validation-rule').remove();
+    } else {
+        alert('At least one validation rule is required.');
+    }
+}
+
+function loadSampleData() {
+    const fileInput = document.getElementById('sampleFile');
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        fetch('/api/analyze-sample', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                populateMappingTable(data.fields);
+            } else {
+                alert('Error analyzing sample file: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error uploading file');
+        });
+    }
+}
+
+function populateMappingTable(fields) {
+    const tbody = document.getElementById('mappingTableBody');
+    tbody.innerHTML = ''; // Clear existing rows
+    
+    fields.forEach(field => {
+        const row = document.createElement('tr');
+        row.className = 'mapping-row';
+        row.innerHTML = `
+            <td><input type="text" class="form-control source-field" value="${field}" readonly></td>
+            <td>
+                <select class="form-select target-field">
+                    <option value="">Select target field</option>
+                    <option value="policy_number">Policy Number</option>
+                    <option value="insured_name">Insured Name</option>
+                    <option value="birth_date">Birth Date</option>
+                    <option value="gender">Gender</option>
+                    <option value="coverage_amount">Coverage Amount</option>
+                    <option value="premium_amount">Premium Amount</option>
+                    <option value="effective_date">Effective Date</option>
+                    <option value="product_code">Product Code</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-select transformation">
+                    <option value="none">None</option>
+                    <option value="uppercase">Uppercase</option>
+                    <option value="lowercase">Lowercase</option>
+                    <option value="date_format">Date Format</option>
+                    <option value="currency_format">Currency Format</option>
+                    <option value="remove_spaces">Remove Spaces</option>
+                    <option value="trim">Trim Whitespace</option>
+                </select>
+            </td>
+            <td>
+                <div class="form-check">
+                    <input class="form-check-input required-field" type="checkbox">
+                    <label class="form-check-label">Required</label>
+                </div>
+            </td>
+            <td>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeMappingRow(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function loadDefaultMapping() {
+    const defaultFields = [
+        'policy_number',
+        'insured_name', 
+        'birth_date',
+        'gender',
+        'coverage_amount',
+        'premium_amount',
+        'effective_date'
+    ];
+    populateMappingTable(defaultFields);
+}
+
+function saveMapping() {
+    const mappingName = document.getElementById('mappingName').value;
+    const productType = document.getElementById('productType').value;
+    const sourceSystem = document.getElementById('sourceSystem').value;
+    const description = document.getElementById('mappingDescription').value;
+    
+    if (!mappingName || !productType) {
+        alert('Please fill in mapping name and product type.');
+        return;
+    }
+    
+    // Collect field mappings
+    const fieldMappings = [];
+    document.querySelectorAll('.mapping-row').forEach(row => {
+        const sourceField = row.querySelector('.source-field').value;
+        const targetField = row.querySelector('.target-field').value;
+        const transformation = row.querySelector('.transformation').value;
+        const required = row.querySelector('.required-field').checked;
+        
+        if (sourceField && targetField) {
+            fieldMappings.push({
+                source: sourceField,
+                target: targetField,
+                transformation: transformation,
+                required: required
+            });
+        }
+    });
+    
+    // Collect validation rules
+    const validationRules = [];
+    document.querySelectorAll('.validation-rule').forEach(rule => {
+        const field = rule.querySelector('.rule-field').value;
+        const type = rule.querySelector('.rule-type').value;
+        const value = rule.querySelector('.rule-value').value;
+        
+        if (field && type) {
+            validationRules.push({
+                field: field,
+                type: type,
+                value: value
+            });
+        }
+    });
+    
+    const mappingData = {
+        name: mappingName,
+        product_type: productType,
+        source_system: sourceSystem,
+        description: description,
+        field_mappings: fieldMappings,
+        validation_rules: validationRules
+    };
+    
+    fetch('/api/save-mapping', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(mappingData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Mapping saved successfully!');
+            window.location.href = '/';
+        } else {
+            alert('Error saving mapping: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving mapping');
+    });
+}
+</script>
+{% endblock %}

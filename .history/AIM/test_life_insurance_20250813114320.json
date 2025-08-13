@@ -1,0 +1,12 @@
+{
+  "policy_number": "TEST001",
+  "applicant_first_name": "John",
+  "applicant_last_name": "Test",
+  "birth_date": "1985-03-15",
+  "effective_date": "2025-01-01",
+  "face_amount": 150000,
+  "premium": 1800,
+  "gender": "M",
+  "product_code": "TERM30",
+  "beneficiary_name": "Jane Test"
+}

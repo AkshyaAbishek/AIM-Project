@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Button Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .test-log {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Delete Button Functionality Test</h1>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Test Import and Delete</h5>
+            </div>
+            <div class="card-body">
+                <button type="button" class="btn btn-warning mb-3" onclick="triggerFileUpload()">
+                    <i class="fas fa-upload me-2"></i>Import Template
+                </button>
+                <input type="file" id="templateFileInput" accept=".json,.xlsx,.csv" style="display: none;" onchange="handleFileUpload(event)">
+                
+                <button type="button" class="btn btn-primary mb-3" onclick="loadSampleData()">
+                    Load Sample Data
+                </button>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Source Field</th>
+                                <th>Target Field</th>
+                                <th>Transform</th>
+                                <th>Required</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mappingTableBody">
+                            <tr class="mapping-row">
+                                <td><input type="text" class="form-control source-field" value="SampleField"></td>
+                                <td>
+                                    <select class="form-select target-field">
+                                        <option value="">Select target</option>
+                                        <option value="policy_number" selected>Policy Number</option>
+                                        <option value="insured_name">Insured Name</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select transformation">
+                                        <option value="none" selected>None</option>
+                                        <option value="trim">Trim</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input required-field" type="checkbox">
+                                    </div>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-danger btn-sm delete-row-btn" data-action="delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5>Test Log</h5>
+            </div>
+            <div class="card-body">
+                <div id="testLog" class="test-log">
+                    Test log will appear here...
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="clearLog()">Clear Log</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Logging function
+        function log(message) {
+            const testLog = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            testLog.innerHTML += `[${timestamp}] ${message}\n`;
+            testLog.scrollTop = testLog.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLog() {
+            document.getElementById('testLog').innerHTML = '';
+        }
+        
+        // Set up event delegation for delete buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Page loaded, setting up event delegation...');
+            
+            const mappingTableBody = document.getElementById('mappingTableBody');
+            if (mappingTableBody) {
+                mappingTableBody.addEventListener('click', function(event) {
+                    const deleteBtn = event.target.closest('.delete-row-btn');
+                    if (deleteBtn) {
+                        log('Delete button clicked!');
+                        const row = deleteBtn.closest('tr');
+                        const tbody = row.parentNode;
+                        
+                        if (tbody.rows.length > 1) {
+                            row.remove();
+                            log(`Row removed. Remaining rows: ${tbody.rows.length}`);
+                        } else {
+                            alert('At least one mapping row is required.');
+                            log('Cannot delete - at least one row required');
+                        }
+                    }
+                });
+                log('Event delegation set up successfully');
+            } else {
+                log('ERROR: mappingTableBody not found');
+            }
+        });
+        
+        // Sample data loading function
+        function loadSampleData() {
+            log('Loading sample data...');
+            const tbody = document.getElementById('mappingTableBody');
+            tbody.innerHTML = '';
+            
+            const sampleData = [
+                { source: 'PolicyNumber', target: 'policy_number', transformation: 'trim', required: true },
+                { source: 'InsuredName', target: 'insured_name', transformation: 'trim', required: true },
+                { source: 'CoverageAmount', target: 'coverage_amount', transformation: 'currency_format', required: false }
+            ];
+            
+            sampleData.forEach((field, index) => {
+                const row = document.createElement('tr');
+                row.className = 'mapping-row';
+                row.innerHTML = `
+                    <td><input type="text" class="form-control source-field" value="${field.source}"></td>
+                    <td>
+                        <select class="form-select target-field">
+                            <option value="">Select target</option>
+                            <option value="policy_number" ${field.target === 'policy_number' ? 'selected' : ''}>Policy Number</option>
+                            <option value="insured_name" ${field.target === 'insured_name' ? 'selected' : ''}>Insured Name</option>
+                            <option value="coverage_amount" ${field.target === 'coverage_amount' ? 'selected' : ''}>Coverage Amount</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-select transformation">
+                            <option value="none" ${field.transformation === 'none' ? 'selected' : ''}>None</option>
+                            <option value="trim" ${field.transformation === 'trim' ? 'selected' : ''}>Trim</option>
+                            <option value="currency_format" ${field.transformation === 'currency_format' ? 'selected' : ''}>Currency</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input required-field" type="checkbox" ${field.required ? 'checked' : ''}>
+                        </div>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-outline-danger btn-sm delete-row-btn" data-action="delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+                log(`Added row ${index + 1}: ${field.source}`);
+            });
+            
+            log(`Sample data loaded. Total rows: ${tbody.rows.length}`);
+        }
+        
+        // Import template functions (simplified versions)
+        function triggerFileUpload() {
+            log('Triggering file upload...');
+            const fileInput = document.getElementById('templateFileInput');
+            if (fileInput) {
+                fileInput.click();
+            } else {
+                log('ERROR: File input not found');
+            }
+        }
+        
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            log(`File selected: ${file.name}`);
+            
+            if (file.name.toLowerCase().endsWith('.json')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const templateData = JSON.parse(e.target.result);
+                        loadTemplateData(templateData);
+                    } catch (error) {
+                        log(`ERROR parsing JSON: ${error.message}`);
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                log('Only JSON files supported in this test');
+            }
+        }
+        
+        function loadTemplateData(templateData) {
+            log(`Loading template: ${templateData.name}`);
+            const tbody = document.getElementById('mappingTableBody');
+            tbody.innerHTML = '';
+            
+            const mappings = templateData.field_mappings || templateData.mappings || [];
+            mappings.forEach((field, index) => {
+                const row = document.createElement('tr');
+                row.className = 'mapping-row';
+                row.innerHTML = `
+                    <td><input type="text" class="form-control source-field" value="${field.source || ''}"></td>
+                    <td>
+                        <select class="form-select target-field">
+                            <option value="">Select target</option>
+                            <option value="policy_number" ${field.target === 'policy_number' ? 'selected' : ''}>Policy Number</option>
+                            <option value="insured_name" ${field.target === 'insured_name' ? 'selected' : ''}>Insured Name</option>
+                            <option value="coverage_amount" ${field.target === 'coverage_amount' ? 'selected' : ''}>Coverage Amount</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-select transformation">
+                            <option value="none" ${field.transformation === 'none' ? 'selected' : ''}>None</option>
+                            <option value="trim" ${field.transformation === 'trim' ? 'selected' : ''}>Trim</option>
+                            <option value="currency_format" ${field.transformation === 'currency_format' ? 'selected' : ''}>Currency</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input required-field" type="checkbox" ${field.required ? 'checked' : ''}>
+                        </div>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-outline-danger btn-sm delete-row-btn" data-action="delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+                log(`Added imported row ${index + 1}: ${field.source}`);
+            });
+            
+            log(`Template loaded successfully. Total rows: ${mappings.length}`);
+        }
+    </script>
+</body>
+</html>

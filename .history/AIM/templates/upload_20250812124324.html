@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Data - AIM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-6">
+                <i class="fas fa-upload me-3" style="color: var(--primary-color);"></i>
+                Upload Data
+            </h1>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Add New Actuarial Data
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">
+                                <i class="fas fa-tag me-1"></i>
+                                Data Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   placeholder="e.g., John Doe Policy Application" required>
+                            <div class="form-text">Descriptive name for this data record</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="product_type" class="form-label">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Product Type <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="product_type" name="product_type" required>
+                                <option value="">Select Product Type</option>
+                                <option value="life">Life Insurance</option>
+                                <option value="annuity">Annuity</option>
+                            </select>
+                            <div class="form-text">Type of insurance product</div>
+                        </div>
+                    </div>
+
+                    <!-- Data Input Methods -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">
+                            <i class="fas fa-database me-2"></i>
+                            Choose Data Input Method:
+                        </h6>
+                        
+                        <!-- Tab Navigation -->
+                        <ul class="nav nav-tabs" id="inputTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="file-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#file-upload" type="button" role="tab">
+                                    <i class="fas fa-file-upload me-2"></i>
+                                    File Upload
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="manual-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#manual-input" type="button" role="tab">
+                                    <i class="fas fa-keyboard me-2"></i>
+                                    Manual Input
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content border border-top-0 p-4" id="inputTabsContent">
+                            <!-- File Upload Tab -->
+                            <div class="tab-pane fade show active" id="file-upload" role="tabpanel">
+                                <div class="mb-3">
+                                    <label for="file" class="form-label">
+                                        <i class="fas fa-paperclip me-1"></i>
+                                        Select File
+                                    </label>
+                                    <input type="file" class="form-control" id="file" name="file" 
+                                           accept=".json,.xlsx,.xls">
+                                    <div class="form-text">
+                                        Supported formats: JSON (.json), Excel (.xlsx, .xls)
+                                        <br>Maximum file size: 16MB
+                                    </div>
+                                </div>
+                                
+                                <!-- File Preview Area -->
+                                <div id="filePreview" class="mt-3" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-eye me-2"></i>File Preview:</h6>
+                                        <div id="fileContent" class="bg-light p-3 rounded" 
+                                             style="max-height: 200px; overflow-y: auto;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Manual Input Tab -->
+                            <div class="tab-pane fade" id="manual-input" role="tabpanel">
+                                <div class="mb-3">
+                                    <label for="json_data" class="form-label">
+                                        <i class="fas fa-code me-1"></i>
+                                        JSON Data
+                                    </label>
+                                    <textarea class="form-control" id="json_data" name="json_data" 
+                                              rows="10" placeholder='Enter JSON data here, e.g.:
+{
+    "policy_number": "POL123456",
+    "applicant_first_name": "John",
+    "applicant_last_name": "Doe",
+    "applicant_age": 35,
+    "face_amount": 100000,
+    "premium": 500,
+    "effective_date": "2025-01-01"
+}'></textarea>
+                                    <div class="form-text">
+                                        Enter valid JSON data. Use the format button to validate and format.
+                                    </div>
+                                </div>
+                                
+                                <!-- JSON Tools -->
+                                <div class="d-flex gap-2 mb-3">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            onclick="formatJSON()">
+                                        <i class="fas fa-magic me-1"></i>Format JSON
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            onclick="validateJSON()">
+                                        <i class="fas fa-check-circle me-1"></i>Validate JSON
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            onclick="clearJSON()">
+                                        <i class="fas fa-trash me-1"></i>Clear
+                                    </button>
+                                </div>
+                                
+                                <!-- JSON Validation Result -->
+                                <div id="jsonValidation" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sample Data Templates -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            Quick Start Templates:
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <button type="button" class="btn btn-outline-info btn-sm w-100" 
+                                        onclick="loadTemplate('life')">
+                                    <i class="fas fa-heart me-1"></i>Life Insurance Template
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <button type="button" class="btn btn-outline-success btn-sm w-100" 
+                                        onclick="loadTemplate('annuity')">
+                                    <i class="fas fa-piggy-bank me-1"></i>Annuity Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i>
+                            Store Data & Continue to Processing
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Section -->
+<div class="row mt-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-question-circle me-2"></i>
+                    Need Help?
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-file-alt me-2"></i>File Requirements</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-check text-success me-2"></i>JSON files with valid structure</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Excel files (.xlsx, .xls)</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Maximum 16MB file size</li>
+                            <li><i class="fas fa-check text-success me-2"></i>UTF-8 encoding recommended</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-lightbulb me-2"></i>Tips</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-arrow-right text-primary me-2"></i>Use descriptive names for easy identification</li>
+                            <li><i class="fas fa-arrow-right text-primary me-2"></i>Validate JSON before submitting</li>
+                            <li><i class="fas fa-arrow-right text-primary me-2"></i>Check product type matches your data</li>
+                            <li><i class="fas fa-arrow-right text-primary me-2"></i>Use templates for quick start</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Sample templates
+    const templates = {
+        life: {
+            "policy_number": "LIFE123456",
+            "applicant_first_name": "John",
+            "applicant_last_name": "Doe",
+            "applicant_age": 35,
+            "applicant_gender": "M",
+            "applicant_birth_date": "1990-01-15",
+            "face_amount": 250000,
+            "premium": 125.50,
+            "premium_mode": "M",
+            "effective_date": "2025-08-01",
+            "product_code": "TERM20",
+            "smoking_status": "N",
+            "state_issued": "CA",
+            "agent_code": "AGT001"
+        },
+        annuity: {
+            "contract_number": "ANN789012",
+            "owner_first_name": "Jane",
+            "owner_last_name": "Smith",
+            "owner_age": 45,
+            "owner_gender": "F",
+            "owner_birth_date": "1980-05-22",
+            "initial_premium": 50000,
+            "product_code": "FIXANN10",
+            "effective_date": "2025-08-01",
+            "guaranteed_rate": 0.025,
+            "surrender_period": 10,
+            "state_issued": "NY",
+            "agent_code": "AGT002"
+        }
+    };
+
+    // Load template data
+    function loadTemplate(type) {
+        const jsonTextarea = document.getElementById('json_data');
+        jsonTextarea.value = JSON.stringify(templates[type], null, 2);
+        
+        // Switch to manual input tab
+        const manualTab = new bootstrap.Tab(document.getElementById('manual-tab'));
+        manualTab.show();
+        
+        // Update product type
+        document.getElementById('product_type').value = type;
+        
+        // Show success message
+        showTemporaryMessage('Template loaded successfully!', 'success');
+    }
+
+    // Format JSON
+    function formatJSON() {
+        const textarea = document.getElementById('json_data');
+        try {
+            const parsed = JSON.parse(textarea.value);
+            textarea.value = JSON.stringify(parsed, null, 2);
+            showValidationResult('JSON formatted successfully!', 'success');
+        } catch (e) {
+            showValidationResult('Invalid JSON: ' + e.message, 'error');
+        }
+    }
+
+    // Validate JSON
+    function validateJSON() {
+        const textarea = document.getElementById('json_data');
+        try {
+            JSON.parse(textarea.value);
+            showValidationResult('JSON is valid!', 'success');
+        } catch (e) {
+            showValidationResult('Invalid JSON: ' + e.message, 'error');
+        }
+    }
+
+    // Clear JSON
+    function clearJSON() {
+        if (confirm('Are you sure you want to clear the JSON data?')) {
+            document.getElementById('json_data').value = '';
+            hideValidationResult();
+        }
+    }
+
+    // Show validation result
+    function showValidationResult(message, type) {
+        const validationDiv = document.getElementById('jsonValidation');
+        validationDiv.style.display = 'block';
+        validationDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'}`;
+        validationDiv.innerHTML = `
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+            ${message}
+        `;
+        
+        // Auto-hide after 3 seconds for success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                hideValidationResult();
+            }, 3000);
+        }
+    }
+
+    // Hide validation result
+    function hideValidationResult() {
+        document.getElementById('jsonValidation').style.display = 'none';
+    }
+
+    // Show temporary message
+    function showTemporaryMessage(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            <i class="fas fa-info-circle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at top of form
+        const form = document.querySelector('form');
+        form.insertBefore(alertDiv, form.firstChild);
+        
+        // Auto-dismiss after 3 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+
+    // File input handler
+    document.getElementById('file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let content = '';
+                    const fileName = file.name.toLowerCase();
+                    
+                    if (fileName.endsWith('.json')) {
+                        const jsonData = JSON.parse(e.target.result);
+                        content = JSON.stringify(jsonData, null, 2);
+                    } else {
+                        content = 'Excel file selected. Preview not available, but file will be processed correctly.';
+                    }
+                    
+                    document.getElementById('fileContent').textContent = content;
+                    document.getElementById('filePreview').style.display = 'block';
+                } catch (error) {
+                    document.getElementById('fileContent').textContent = 'Error reading file: ' + error.message;
+                    document.getElementById('filePreview').style.display = 'block';
+                }
+            };
+            reader.readAsText(file);
+        }
+    });
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        const productType = document.getElementById('product_type').value;
+        const file = document.getElementById('file').files[0];
+        const jsonData = document.getElementById('json_data').value.trim();
+        
+        if (!name || !productType) {
+            e.preventDefault();
+            alert('Please fill in all required fields (Name and Product Type).');
+            return;
+        }
+        
+        if (!file && !jsonData) {
+            e.preventDefault();
+            alert('Please either upload a file or enter JSON data manually.');
+            return;
+        }
+        
+        if (jsonData) {
+            try {
+                JSON.parse(jsonData);
+            } catch (error) {
+                e.preventDefault();
+                alert('Invalid JSON data. Please check your JSON format.');
+                return;
+            }
+        }
+    });
+
+    // Auto-validate JSON as user types
+    let jsonValidationTimeout;
+    document.getElementById('json_data').addEventListener('input', function() {
+        clearTimeout(jsonValidationTimeout);
+        jsonValidationTimeout = setTimeout(() => {
+            const value = this.value.trim();
+            if (value) {
+                try {
+                    JSON.parse(value);
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } catch (e) {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            } else {
+                this.classList.remove('is-valid', 'is-invalid');
+            }
+        }, 500);
+    });
+</script>
+{% endblock %}

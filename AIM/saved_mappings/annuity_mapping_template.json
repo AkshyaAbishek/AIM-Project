@@ -1,0 +1,38 @@
+{
+  "name": "Annuity Mapping Template",
+  "product_type": "annuity",
+  "description": "Standard field mapping template for annuity products including contract details, owner information, and accumulation values.",
+  "created_date": "2025-08-13T19:55:37.484088",
+  "field_mappings": [
+    {
+      "source": "ContractNumber",
+      "target": "contract_number",
+      "transformation": "trim",
+      "required": true
+    },
+    {
+      "source": "DateOfBirth",
+      "target": "birth_date",
+      "transformation": "date_format",
+      "required": true
+    },
+    {
+      "source": "Gender",
+      "target": "gender",
+      "transformation": "uppercase",
+      "required": true
+    },
+    {
+      "source": "ProductCode",
+      "target": "product_code",
+      "transformation": "uppercase",
+      "required": true
+    },
+    {
+      "source": "BeneficiaryName",
+      "target": "beneficiary_name",
+      "transformation": "trim",
+      "required": false
+    }
+  ]
+}

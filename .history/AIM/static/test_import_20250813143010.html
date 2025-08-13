@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Template Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .console-output {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Import Template Test Page</h1>
+        <p>This page tests the import template functionality used in the AIM field mapping page.</p>
+        
+        <div class="test-section">
+            <h3>Test 1: Basic File Upload</h3>
+            <button type="button" class="btn btn-warning" onclick="triggerFileUpload()">
+                <i class="fas fa-upload me-2"></i>Import Template
+            </button>
+            <input type="file" id="templateFileInput" accept=".json,.xlsx,.csv" style="display: none;" onchange="handleFileUpload(event)">
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 2: Direct API Test</h3>
+            <button type="button" class="btn btn-primary" onclick="testAPI()">
+                Test Upload API Directly
+            </button>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test Results</h3>
+            <div id="testResults" class="console-output">
+                Console output will appear here...
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Template Data Display</h3>
+            <div id="templateDisplay">
+                <p class="text-muted">Template data will appear here after successful import...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Redirect console.log to our display area
+        const originalLog = console.log;
+        const originalError = console.error;
+        const testResults = document.getElementById('testResults');
+        
+        function addToConsole(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : 'black';
+            testResults.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            testResults.scrollTop = testResults.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+        
+        // Test functions - exact copies from field_mapping.html
+        function triggerFileUpload() {
+            console.log('triggerFileUpload called');
+            const fileInput = document.getElementById('templateFileInput');
+            if (fileInput) {
+                console.log('File input found, triggering click');
+                try {
+                    fileInput.click();
+                    console.log('File input click triggered successfully');
+                } catch (error) {
+                    console.error('Error triggering file input click:', error);
+                }
+            } else {
+                console.error('templateFileInput element not found');
+            }
+        }
+
+        function handleFileUpload(event) {
+            console.log('handleFileUpload called');
+            
+            try {
+                const file = event.target.files[0];
+                if (!file) {
+                    console.log('No file selected');
+                    return;
+                }
+                
+                const fileName = file.name.toLowerCase();
+                console.log('Uploading file:', fileName, 'Size:', file.size, 'bytes');
+                
+                if (fileName.endsWith('.json')) {
+                    handleJSONUpload(file);
+                } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+                    handleExcelUpload(file);
+                } else {
+                    console.error('Please upload a JSON or Excel file.');
+                }
+            } catch (error) {
+                console.error('Error in handleFileUpload:', error);
+            }
+        }
+
+        function handleJSONUpload(file) {
+            console.log('Processing JSON file:', file.name);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const templateData = JSON.parse(e.target.result);
+                    console.log('JSON template data parsed successfully');
+                    displayTemplate(templateData);
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function handleExcelUpload(file) {
+            console.log('Processing Excel file:', file.name);
+            const formData = new FormData();
+            formData.append('template_file', file);
+            
+            console.log('Uploading to /api/upload-template...');
+            
+            fetch('/api/upload-template', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('Server response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    console.log('Excel template processed successfully');
+                    displayTemplate(data.template_data);
+                } else {
+                    console.error('Excel processing error:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading Excel file:', error);
+            });
+        }
+        
+        function displayTemplate(templateData) {
+            const display = document.getElementById('templateDisplay');
+            display.innerHTML = `
+                <h5>Template Loaded Successfully!</h5>
+                <p><strong>Name:</strong> ${templateData.name || 'N/A'}</p>
+                <p><strong>Product Type:</strong> ${templateData.product_type || 'N/A'}</p>
+                <p><strong>Description:</strong> ${templateData.description || 'N/A'}</p>
+                <p><strong>Field Mappings:</strong> ${(templateData.field_mappings || templateData.mappings || []).length}</p>
+                <details>
+                    <summary>View Raw Data</summary>
+                    <pre>${JSON.stringify(templateData, null, 2)}</pre>
+                </details>
+            `;
+        }
+        
+        function testAPI() {
+            console.log('Testing API endpoint directly...');
+            fetch('/api/upload-template', {
+                method: 'POST',
+                body: new FormData() // Empty form data
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('API Test Response:', JSON.stringify(data, null, 2));
+            })
+            .catch(error => {
+                console.error('API Test Error:', error);
+            });
+        }
+        
+        // Initialize
+        console.log('Import Template Test Page Loaded');
+        console.log('Ready to test import functionality');
+    </script>
+</body>
+</html>

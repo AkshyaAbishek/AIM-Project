@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AIM - Actuarial Input Mapper{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #366092;
+            --secondary-color: #2c5282;
+            --success-color: #48bb78;
+            --warning-color: #ed8936;
+            --error-color: #f56565;
+            --bg-light: #f7fafc;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(54, 96, 146, 0.4);
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-enhanced {
+            height: 8px;
+            border-radius: 10px;
+            background-color: #e2e8f0;
+        }
+        
+        .progress-bar-enhanced {
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--success-color), #38a169);
+        }
+        
+        .alert {
+            border: none;
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+        
+        .alert-success {
+            border-left-color: var(--success-color);
+            background-color: #f0fff4;
+        }
+        
+        .alert-danger {
+            border-left-color: var(--error-color);
+            background-color: #fff5f5;
+        }
+        
+        .alert-warning {
+            border-left-color: var(--warning-color);
+            background-color: #fffbeb;
+        }
+        
+        .table-enhanced {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .table-enhanced th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .table-enhanced td {
+            border-color: #e2e8f0;
+            vertical-align: middle;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 0;
+            margin-top: 4rem;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .quality-badge {
+            border-radius: 15px;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .quality-high { background-color: #c6f6d5; color: #22543d; }
+        .quality-medium { background-color: #fefcbf; color: #744210; }
+        .quality-low { background-color: #fed7d7; color: #742a2a; }
+        
+        /* Floating Help Button */
+        .floating-help-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+        
+        .btn-floating {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-floating:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+        }
+        
+        .btn-floating:active {
+            transform: translateY(0);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .floating-help-btn {
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .btn-floating {
+                width: 50px;
+                height: 50px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-chart-line me-2"></i>
+                AIM - Actuarial Input Mapper
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('upload_file') }}">
+                            <i class="fas fa-upload me-1"></i>Upload Data
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('field_mapping') }}">
+                            <i class="fas fa-map me-1"></i>Field Mapping
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('compare') }}">
+                            <i class="fas fa-balance-scale me-1"></i>Compare
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('view_data') }}">
+                            <i class="fas fa-database me-1"></i>View Data
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('help_page') }}">
+                            <i class="fas fa-question-circle me-1"></i>Help
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' if category == 'info' else 'check-circle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Floating Help Button -->
+    <div class="floating-help-btn">
+        <a href="{{ url_for('help_page') }}" class="btn btn-primary btn-floating" 
+           data-bs-toggle="tooltip" data-bs-placement="left" title="Need help? Click for documentation">
+            <i class="fas fa-question"></i>
+        </a>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Processing your request...</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto">
+        <div class="container text-center">
+            <div class="row">
+                <div class="col-md-12">
+                    <p class="mb-0">
+                        <i class="fas fa-copyright me-1"></i>
+                        2025 AIM - Actuarial Input Mapper. 
+                        <span class="ms-3">
+                            <i class="fas fa-code me-1"></i>
+                            Built with Flask & Bootstrap
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Initialize tooltips when document is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+        
+        // Show loading spinner for form submissions
+        function showLoading() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+        }
+        
+        // Hide loading spinner
+        function hideLoading() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+        
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+        
+        // Quality badge styling
+        function getQualityClass(score) {
+            if (score >= 80) return 'quality-high';
+            if (score >= 60) return 'quality-medium';
+            return 'quality-low';
+        }
+        
+        // Format dates
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+        
+        // AJAX helper function
+        function fetchData(url) {
+            return fetch(url)
+                .then(response => response.json())
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    return null;
+                });
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

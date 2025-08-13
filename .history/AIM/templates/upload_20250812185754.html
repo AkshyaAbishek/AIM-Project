@@ -1,0 +1,735 @@
+{% extends "base.html" %}
+
+{% block title %}AIM - Upload Data{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-6">
+                <i class="fas fa-upload me-3" style="color: var(--primary-color);"></i>
+                Upload Data
+                <a href="{{ url_for('help_page') }}#collapseUpload" class="btn btn-outline-info btn-sm ms-3" 
+                   data-bs-toggle="tooltip" title="Get help with data upload">
+                    <i class="fas fa-question-circle"></i>
+                </a>
+            </h1>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Add New Actuarial Data
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">
+                                <i class="fas fa-tag me-1"></i>
+                                Data Name <span class="text-danger">*</span>
+                                <i class="fas fa-info-circle ms-1 text-muted" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Enter a descriptive name to identify this data record"></i>
+                            </label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   placeholder="e.g., John Doe Policy Application" required>
+                            <div class="form-text">Descriptive name for this data record</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="product_type" class="form-label">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Product Type <span class="text-danger">*</span>
+                                <i class="fas fa-info-circle ms-1 text-muted" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Select the insurance product type that best matches your data"></i>
+                            </label>
+                            <select class="form-select" id="product_type" name="product_type" required>
+                                <option value="">Select Product Type</option>
+                                <option value="life">Life Insurance</option>
+                                <option value="annuity">Annuity</option>
+                            </select>
+                            <div class="form-text">Type of insurance product</div>
+                        </div>
+                    </div>
+
+                    <!-- Data Input Methods -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">
+                            <i class="fas fa-database me-2"></i>
+                            Choose Data Input Method:
+                        </h6>
+                        
+                        <!-- Tab Navigation -->
+                        <ul class="nav nav-tabs" id="inputTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="file-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#file-upload" type="button" role="tab">
+                                    <i class="fas fa-file-upload me-2"></i>
+                                    File Upload
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="manual-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#manual-input" type="button" role="tab">
+                                    <i class="fas fa-keyboard me-2"></i>
+                                    Manual Input
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content border border-top-0 p-4" id="inputTabsContent">
+                            <!-- File Upload Tab -->
+                            <div class="tab-pane fade show active" id="file-upload" role="tabpanel">
+                                <div class="mb-3">
+                                    <label for="file" class="form-label">
+                                        <i class="fas fa-paperclip me-1"></i>
+                                        Select File
+                                    </label>
+                                    <input type="file" class="form-control" id="file" name="file" 
+                                           accept=".json,.xlsx,.xls">
+                                    <div class="form-text">
+                                        Supported formats: JSON (.json), Excel (.xlsx, .xls)
+                                        <br>Maximum file size: 16MB
+                                    </div>
+                                </div>
+                                
+                                <!-- File Preview Area -->
+                                <div id="filePreview" class="mt-3" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-eye me-2"></i>File Preview:</h6>
+                                        <div id="fileContent" class="bg-light p-3 rounded" 
+                                             style="max-height: 200px; overflow-y: auto;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Manual Input Tab -->
+                            <div class="tab-pane fade" id="manual-input" role="tabpanel">
+                                <div class="mb-3">
+                                    <label for="json_data" class="form-label">
+                                        <i class="fas fa-code me-1"></i>
+                                        JSON Data
+                                    </label>
+                                    <textarea class="form-control" id="json_data" name="json_data" 
+                                              rows="10" placeholder='Enter JSON data here, e.g.:
+{
+    "policy_number": "POL123456",
+    "applicant_first_name": "John",
+    "applicant_last_name": "Doe",
+    "applicant_age": 35,
+    "face_amount": 100000,
+    "premium": 500,
+    "effective_date": "2025-01-01"
+}'></textarea>
+                                    <div class="form-text">
+                                        Enter valid JSON data. Use the format button to validate and format.
+                                    </div>
+                                </div>
+                                
+                                <!-- JSON Tools -->
+                                <div class="d-flex gap-2 mb-3">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            onclick="formatJSON()">
+                                        <i class="fas fa-magic me-1"></i>Format JSON
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            onclick="validateJSON()">
+                                        <i class="fas fa-check-circle me-1"></i>Validate JSON
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            onclick="clearJSON()">
+                                        <i class="fas fa-trash me-1"></i>Clear
+                                    </button>
+                                </div>
+                                
+                                <!-- JSON Validation Result -->
+                                <div id="jsonValidation" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sample Data Templates -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            Quick Start Templates:
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <button type="button" class="btn btn-outline-info btn-sm w-100" 
+                                        onclick="loadTemplate('life')">
+                                    <i class="fas fa-heart me-1"></i>Life Insurance Template
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <button type="button" class="btn btn-outline-success btn-sm w-100" 
+                                        onclick="loadTemplate('annuity')">
+                                    <i class="fas fa-piggy-bank me-1"></i>Annuity Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calculator Selection -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <label for="calculator_path" class="form-label">
+                                <i class="fas fa-calculator me-1"></i>
+                                Actuarial Calculator Path <span class="text-danger">*</span>
+                                <i class="fas fa-info-circle ms-1 text-muted" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Select or enter the path to the actuarial calculator for this data"></i>
+                            </label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="calculator_path" name="calculator_path" 
+                                       placeholder="e.g., /calculators/life_insurance/standard_v2.json" required>
+                                <button type="button" class="btn btn-outline-secondary dropdown-toggle" 
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-folder-open"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><h6 class="dropdown-header">Available Calculators</h6></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setCalculatorPath('/calculators/life_insurance/standard.json')">
+                                        <i class="fas fa-heart me-2"></i>Life Insurance - Standard
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setCalculatorPath('/calculators/life_insurance/term.json')">
+                                        <i class="fas fa-heart me-2"></i>Life Insurance - Term
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setCalculatorPath('/calculators/annuity/fixed.json')">
+                                        <i class="fas fa-coins me-2"></i>Annuity - Fixed
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setCalculatorPath('/calculators/annuity/variable.json')">
+                                        <i class="fas fa-coins me-2"></i>Annuity - Variable
+                                    </a></li>
+                                </ul>
+                            </div>
+                            <div class="form-text">Path to the actuarial calculator configuration file</div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="row gap-2 mb-3">
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-info btn-lg w-100" onclick="generateTemplate()">
+                                <i class="fas fa-table me-2"></i>
+                                Generate Template
+                            </button>
+                            <small class="text-muted d-block mt-1">Preview field mapping</small>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-success btn-lg w-100" onclick="saveData()">
+                                <i class="fas fa-save me-2"></i>
+                                Save Data Only
+                            </button>
+                            <small class="text-muted d-block mt-1">Save data without processing</small>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary btn-lg w-100" onclick="event.preventDefault(); processData();">
+                                <i class="fas fa-cogs me-2"></i>
+                                Process Data
+                            </button>
+                            <small class="text-muted d-block mt-1">Save and process with mapping</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Section -->
+<div class="row mt-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-question-circle me-2"></i>
+                    Upload Help & Examples
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-file-alt me-2"></i>File Requirements</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-check text-success me-2"></i>JSON files with valid structure</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Excel files (.xlsx, .xls)</li>
+                            <li><i class="fas fa-check text-success me-2"></i>CSV files with headers</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Maximum 16MB file size</li>
+                            <li><i class="fas fa-check text-success me-2"></i>UTF-8 encoding recommended</li>
+                        </ul>
+                        
+                        <h6 class="mt-3"><i class="fas fa-lightbulb me-2"></i>Tips</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-arrow-right text-primary me-2"></i>Use descriptive names for easy identification</li>
+                            <li><i class="fas fa-arrow-right text-primary me-2"></i>Validate JSON before submitting</li>
+                            <li><i class="fas fa-arrow-right text-primary me-2"></i>Check product type matches your data</li>
+                            <li><i class="fas fa-arrow-right text-primary me-2"></i>Use templates for quick start</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-code me-2"></i>Sample JSON Structure</h6>
+                        <div class="bg-light p-2 rounded small">
+                            <pre><code>{
+  "policy_number": "POL123456",
+  "insured_name": "John Doe",
+  "birth_date": "1990-01-15",
+  "gender": "M",
+  "coverage_amount": 100000,
+  "premium_amount": 1200,
+  "effective_date": "2025-01-01",
+  "product_code": "LIFE_TERM"
+}</code></pre>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="showExampleModal()">
+                                <i class="fas fa-eye me-1"></i>View More Examples
+                            </button>
+                            <a href="{{ url_for('help_page') }}#collapseUpload" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-book me-1"></i>Full Documentation
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Example Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-code me-2"></i>Data Format Examples
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12">
+                        <ul class="nav nav-pills mb-3" id="exampleTabs">
+                            <li class="nav-item">
+                                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#life-example">Life Insurance</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#annuity-example">Annuity</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#excel-example">Excel Format</button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="life-example">
+                                <h6>Life Insurance JSON Example:</h6>
+                                <pre class="bg-light p-3 rounded"><code>{
+  "policy_number": "LI-2025-001",
+  "insured_name": "Jane Smith",
+  "birth_date": "1985-03-20",
+  "gender": "F",
+  "coverage_amount": 500000,
+  "premium_amount": 2400,
+  "premium_frequency": "Annual",
+  "effective_date": "2025-01-01",
+  "product_code": "TERM_20",
+  "smoker_status": "N",
+  "occupation": "Teacher",
+  "beneficiary": "John Smith"
+}</code></pre>
+                            </div>
+                            
+                            <div class="tab-pane fade" id="annuity-example">
+                                <h6>Annuity JSON Example:</h6>
+                                <pre class="bg-light p-3 rounded"><code>{
+  "contract_number": "ANN-2025-001",
+  "annuitant_name": "Robert Johnson",
+  "birth_date": "1960-07-10",
+  "gender": "M",
+  "initial_premium": 100000,
+  "premium_frequency": "Single",
+  "annuity_type": "Fixed",
+  "interest_rate": 3.5,
+  "start_date": "2025-01-01",
+  "payout_start": "2030-01-01",
+  "product_code": "FIXED_5YR"
+}</code></pre>
+                            </div>
+                            
+                            <div class="tab-pane fade" id="excel-example">
+                                <h6>Excel/CSV Column Headers:</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>policy_number</td>
+                                                <td>insured_name</td>
+                                                <td>birth_date</td>
+                                                <td>coverage_amount</td>
+                                                <td>premium_amount</td>
+                                            </tr>
+                                            <tr>
+                                                <td>POL-001</td>
+                                                <td>John Doe</td>
+                                                <td>1990-01-15</td>
+                                                <td>100000</td>
+                                                <td>1200</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p class="small text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    First row should contain column headers, data starts from row 2.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="copyExample()">
+                    <i class="fas fa-copy me-1"></i>Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Sample templates
+    const templates = {
+        life: {
+            "policy_number": "LIFE123456",
+            "applicant_first_name": "John",
+            "applicant_last_name": "Doe",
+            "applicant_age": 35,
+            "applicant_gender": "M",
+            "applicant_birth_date": "1990-01-15",
+            "face_amount": 250000,
+            "premium": 125.50,
+            "premium_mode": "M",
+            "effective_date": "2025-08-01",
+            "product_code": "TERM20",
+            "smoking_status": "N",
+            "state_issued": "CA",
+            "agent_code": "AGT001"
+        },
+        annuity: {
+            "contract_number": "ANN789012",
+            "owner_first_name": "Jane",
+            "owner_last_name": "Smith",
+            "owner_age": 45,
+            "owner_gender": "F",
+            "owner_birth_date": "1980-05-22",
+            "initial_premium": 50000,
+            "product_code": "FIXANN10",
+            "effective_date": "2025-08-01",
+            "guaranteed_rate": 0.025,
+            "surrender_period": 10,
+            "state_issued": "NY",
+            "agent_code": "AGT002"
+        }
+    };
+
+    // Load template data
+    function loadTemplate(type) {
+        const jsonTextarea = document.getElementById('json_data');
+        jsonTextarea.value = JSON.stringify(templates[type], null, 2);
+        
+        // Switch to manual input tab
+        const manualTab = new bootstrap.Tab(document.getElementById('manual-tab'));
+        manualTab.show();
+        
+        // Update product type
+        document.getElementById('product_type').value = type;
+        
+        // Show success message
+        showTemporaryMessage('Template loaded successfully!', 'success');
+    }
+
+    // Format JSON
+    function formatJSON() {
+        const textarea = document.getElementById('json_data');
+        try {
+            const parsed = JSON.parse(textarea.value);
+            textarea.value = JSON.stringify(parsed, null, 2);
+            showValidationResult('JSON formatted successfully!', 'success');
+        } catch (e) {
+            showValidationResult('Invalid JSON: ' + e.message, 'error');
+        }
+    }
+
+    // Validate JSON
+    function validateJSON() {
+        const textarea = document.getElementById('json_data');
+        try {
+            JSON.parse(textarea.value);
+            showValidationResult('JSON is valid!', 'success');
+        } catch (e) {
+            showValidationResult('Invalid JSON: ' + e.message, 'error');
+        }
+    }
+
+    // Clear JSON
+    function clearJSON() {
+        if (confirm('Are you sure you want to clear the JSON data?')) {
+            document.getElementById('json_data').value = '';
+            hideValidationResult();
+        }
+    }
+
+    // Show validation result
+    function showValidationResult(message, type) {
+        const validationDiv = document.getElementById('jsonValidation');
+        validationDiv.style.display = 'block';
+        validationDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'}`;
+        validationDiv.innerHTML = `
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+            ${message}
+        `;
+        
+        // Auto-hide after 3 seconds for success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                hideValidationResult();
+            }, 3000);
+        }
+    }
+
+    // Hide validation result
+    function hideValidationResult() {
+        document.getElementById('jsonValidation').style.display = 'none';
+    }
+
+    // Show temporary message
+    function showTemporaryMessage(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            <i class="fas fa-info-circle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at top of form
+        const form = document.querySelector('form');
+        form.insertBefore(alertDiv, form.firstChild);
+        
+        // Auto-dismiss after 3 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+
+    // File input handler
+    document.getElementById('file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let content = '';
+                    const fileName = file.name.toLowerCase();
+                    
+                    if (fileName.endsWith('.json')) {
+                        const jsonData = JSON.parse(e.target.result);
+                        content = JSON.stringify(jsonData, null, 2);
+                    } else {
+                        content = 'Excel file selected. Preview not available, but file will be processed correctly.';
+                    }
+                    
+                    document.getElementById('fileContent').textContent = content;
+                    document.getElementById('filePreview').style.display = 'block';
+                } catch (error) {
+                    document.getElementById('fileContent').textContent = 'Error reading file: ' + error.message;
+                    document.getElementById('filePreview').style.display = 'block';
+                }
+            };
+            reader.readAsText(file);
+        }
+    });
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        const productType = document.getElementById('product_type').value;
+        const file = document.getElementById('file').files[0];
+        const jsonData = document.getElementById('json_data').value.trim();
+        
+        if (!name || !productType) {
+            e.preventDefault();
+            alert('Please fill in all required fields (Name and Product Type).');
+            return;
+        }
+        
+        if (!file && !jsonData) {
+            e.preventDefault();
+            alert('Please either upload a file or enter JSON data manually.');
+            return;
+        }
+        
+        if (jsonData) {
+            try {
+                JSON.parse(jsonData);
+            } catch (error) {
+                e.preventDefault();
+                alert('Invalid JSON data. Please check your JSON format.');
+                return;
+            }
+        }
+    });
+
+    // Auto-validate JSON as user types
+    let jsonValidationTimeout;
+    document.getElementById('json_data').addEventListener('input', function() {
+        clearTimeout(jsonValidationTimeout);
+        jsonValidationTimeout = setTimeout(() => {
+            const value = this.value.trim();
+            if (value) {
+                try {
+                    JSON.parse(value);
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } catch (e) {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            } else {
+                this.classList.remove('is-valid', 'is-invalid');
+            }
+        }, 500);
+    });
+
+    // Help functions
+    function showExampleModal() {
+        const modal = new bootstrap.Modal(document.getElementById('exampleModal'));
+        modal.show();
+    }
+
+    function copyExample() {
+        // Get the active tab content
+        const activeTab = document.querySelector('#exampleModal .tab-pane.active');
+        const codeElement = activeTab.querySelector('code');
+        
+        if (codeElement) {
+            // Create a temporary textarea to copy the text
+            const textarea = document.createElement('textarea');
+            textarea.value = codeElement.textContent;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            // Show success message
+            showTemporaryMessage('Example copied to clipboard!', 'success');
+            
+            // Close modal and paste into manual input
+            const modal = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
+            modal.hide();
+            
+            // Switch to manual input and paste
+            const manualTab = new bootstrap.Tab(document.getElementById('manual-tab'));
+            manualTab.show();
+            document.getElementById('json_data').value = codeElement.textContent.trim();
+        }
+    }
+
+    // Set calculator path from dropdown
+    function setCalculatorPath(path) {
+        document.getElementById('calculator_path').value = path;
+    }
+
+    // Save data only (without processing)
+    function saveData() {
+        const formData = new FormData();
+        
+        // Get form values
+        const name = document.getElementById('name').value.trim();
+        const productType = document.getElementById('product_type').value;
+        const calculatorPath = document.getElementById('calculator_path').value.trim();
+        const file = document.getElementById('file').files[0];
+        const jsonData = document.getElementById('json_data').value.trim();
+        
+        // Validation
+        if (!name || !productType || !calculatorPath) {
+            alert('Please fill in all required fields (Name, Product Type, and Calculator Path).');
+            return;
+        }
+        
+        if (!file && !jsonData) {
+            alert('Please provide data either by uploading a file or entering JSON manually.');
+            return;
+        }
+        
+        // Prepare form data
+        formData.append('name', name);
+        formData.append('product_type', productType);
+        formData.append('calculator_path', calculatorPath);
+        formData.append('save_only', 'true');
+        
+        if (file) {
+            formData.append('file', file);
+        } else {
+            formData.append('json_data', jsonData);
+        }
+        
+        // Show loading
+        showLoading();
+        
+        // Submit to save endpoint
+        fetch('/api/save-data', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                alert('Data saved successfully! Record ID: ' + data.record_id);
+                // Optionally redirect or clear form
+                window.location.href = '/view-data';
+            } else {
+                alert('Error saving data: ' + data.message);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            console.error('Error:', error);
+            alert('Error saving data. Please try again.');
+        });
+    }
+
+    // Initialize tooltips for help elements
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

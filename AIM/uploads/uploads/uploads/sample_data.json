@@ -1,0 +1,10 @@
+{
+  "policy_number": "POL-2024-001",
+  "insured_name": "John Doe",
+  "birth_date": "1985-01-15",
+  "gender": "M",
+  "coverage_amount": 100000,
+  "premium_amount": 1200,
+  "effective_date": "2024-01-01",
+  "product_code": "LIFE_TERM"
+}

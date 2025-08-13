@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+
+{% block title %}AIM - Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-6">
+                <i class="fas fa-tachometer-alt me-3" style="color: var(--primary-color);"></i>
+                AIM Dashboard
+                <a href="{{ url_for('help_page') }}#collapseDashboard" class="btn btn-outline-info btn-sm ms-3" 
+                   data-bs-toggle="tooltip" title="Get help with the dashboard">
+                    <i class="fas fa-question-circle"></i>
+                </a>
+            </h1>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('upload_file') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add Data
+                </a>
+                <a href="{{ url_for('field_mapping') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-map me-2"></i>Create Mapping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0">{{ stats.total_records }}</h3>
+                    <p class="mb-0">Total Records</p>
+                </div>
+                <div class="fs-1">
+                    <i class="fas fa-database"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0">{{ "%.1f"|format(stats.average_quality) }}%</h3>
+                    <p class="mb-0">Avg Quality Score</p>
+                </div>
+                <div class="fs-1">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0">{{ stats.product_distribution|length }}</h3>
+                    <p class="mb-0">Product Types</p>
+                </div>
+                <div class="fs-1">
+                    <i class="fas fa-tags"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Distribution Chart -->
+{% if stats.product_distribution %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-pie-chart me-2"></i>
+                    Product Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for product, count in stats.product_distribution.items() %}
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-capitalize">{{ product }}</span>
+                            <span class="badge bg-primary">{{ count }} records</span>
+                        </div>
+                        <div class="progress progress-enhanced mt-2">
+                            <div class="progress-bar progress-bar-enhanced" 
+                                 style="width: {{ (count / stats.total_records * 100) if stats.total_records > 0 else 0 }}%">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('upload_file') }}" class="text-decoration-none">
+                            <div class="card h-100 text-center border-primary">
+                                <div class="card-body">
+                                    <i class="fas fa-upload fa-3x text-primary mb-3"></i>
+                                    <h6 class="card-title">Upload Data</h6>
+                                    <p class="card-text small">Add new JSON or Excel data</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('field_mapping') }}" class="text-decoration-none">
+                            <div class="card h-100 text-center border-success">
+                                <div class="card-body">
+                                    <i class="fas fa-map fa-3x text-success mb-3"></i>
+                                    <h6 class="card-title">Field Mapping</h6>
+                                    <p class="card-text small">Create Excel mapping templates</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('view_data') }}" class="text-decoration-none">
+                            <div class="card h-100 text-center border-info">
+                                <div class="card-body">
+                                    <i class="fas fa-table fa-3x text-info mb-3"></i>
+                                    <h6 class="card-title">View Data</h6>
+                                    <p class="card-text small">Browse all stored records</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <a href="/api/stats" class="text-decoration-none" target="_blank">
+                            <div class="card h-100 text-center border-warning">
+                                <div class="card-body">
+                                    <i class="fas fa-chart-bar fa-3x text-warning mb-3"></i>
+                                    <h6 class="card-title">API Stats</h6>
+                                    <p class="card-text small">View raw statistics data</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Data -->
+{% if recent_data %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    Your Recent Data
+                </h5>
+                <a href="{{ url_for('view_data') }}" class="btn btn-sm btn-outline-light">
+                    View All <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-enhanced mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Product Type</th>
+                                <th>Quality Score</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in recent_data[:10] %}
+                            <tr>
+                                <td><strong>#{{ record.id }}</strong></td>
+                                <td>{{ record.name }}</td>
+                                <td>
+                                    <span class="badge bg-secondary text-capitalize">
+                                        {{ record.product_type }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="quality-badge {{ 'quality-high' if record.quality_score >= 80 else 'quality-medium' if record.quality_score >= 60 else 'quality-low' }}">
+                                        {{ record.quality_score }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {{ 'bg-success' if record['validation_status'] == 'validated' else 'bg-warning' }}">
+                                        {{ record['validation_status'].title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ record.created_date[:19].replace('T', ' ') }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('process_data', record_id=record.id) }}" 
+                                           class="btn btn-outline-primary" title="Process Data">
+                                            <i class="fas fa-play"></i>
+                                        </a>
+                                        <button class="btn btn-outline-info" 
+                                                onclick="viewRecord({{ record.id }})" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- No Data State -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-database fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted">No Data Yet</h4>
+                <p class="text-muted mb-4">
+                    Get started by uploading your first actuarial data file or entering JSON data manually.
+                </p>
+                <a href="{{ url_for('upload_file') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-upload me-2"></i>
+                    Upload Your First File
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Record Details Modal -->
+<div class="modal fade" id="recordModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Record Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="recordModalBody">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // View record details in modal
+    function viewRecord(recordId) {
+        const modal = new bootstrap.Modal(document.getElementById('recordModal'));
+        const modalBody = document.getElementById('recordModalBody');
+        
+        // Show loading spinner
+        modalBody.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading record details...</p>
+            </div>
+        `;
+        
+        modal.show();
+        
+        // Fetch record data
+        fetch(`/api/data/${recordId}`)
+            .then(response => response.json())
+            .then(data => {
+                modalBody.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-info-circle me-2"></i>Basic Information</h6>
+                            <table class="table table-sm">
+                                <tr><td><strong>ID:</strong></td><td>#${data.id}</td></tr>
+                                <tr><td><strong>Name:</strong></td><td>${data.name}</td></tr>
+                                <tr><td><strong>Product Type:</strong></td><td class="text-capitalize">${data.product_type}</td></tr>
+                                <tr><td><strong>Quality Score:</strong></td><td>
+                                    <span class="quality-badge ${getQualityClass(data.quality_score)}">${data.quality_score}%</span>
+                                </td></tr>
+                                <tr><td><strong>Status:</strong></td><td>
+                                    <span class="badge ${data.validation_status === 'validated' ? 'bg-success' : 'bg-warning'}">${data.validation_status}</span>
+                                </td></tr>
+                                <tr><td><strong>Created:</strong></td><td>${formatDate(data.created_date)}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-database me-2"></i>Data Preview</h6>
+                            <div class="bg-light p-3 rounded" style="max-height: 200px; overflow-y: auto;">
+                                <pre class="mb-0 small">${JSON.stringify(JSON.parse(data.json_data), null, 2)}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <a href="/process/${data.id}" class="btn btn-primary">
+                                    <i class="fas fa-play me-1"></i>Process Data
+                                </a>
+                                <button class="btn btn-outline-secondary" onclick="downloadRecord(${data.id})">
+                                    <i class="fas fa-download me-1"></i>Download JSON
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                modalBody.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading record details: ${error.message}
+                    </div>
+                `;
+            });
+    }
+    
+    // Download record as JSON
+    function downloadRecord(recordId) {
+        fetch(`/api/data/${recordId}`)
+            .then(response => response.json())
+            .then(data => {
+                const jsonData = JSON.parse(data.json_data);
+                const blob = new Blob([JSON.stringify(jsonData, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `aim_record_${recordId}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+    }
+    
+    // Auto-refresh stats every 30 seconds
+    setInterval(function() {
+        fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                // Update stats cards without full page reload
+                const cards = document.querySelectorAll('.stats-card h3');
+                if (cards.length >= 3) {
+                    cards[0].textContent = data.total_records;
+                    cards[1].textContent = data.average_quality.toFixed(1) + '%';
+                    cards[2].textContent = Object.keys(data.product_distribution).length;
+                }
+            })
+            .catch(error => console.log('Stats update failed:', error));
+    }, 30000);
+</script>
+{% endblock %}
