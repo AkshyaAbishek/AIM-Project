@@ -1040,50 +1040,23 @@ def index():
     """Main dashboard page"""
     try:
         print("Starting index route...")
-        
         # Ensure session ID exists
         if 'session_id' not in session:
             session['session_id'] = os.urandom(16).hex()
             print(f"Created new session ID: {session['session_id']}")
-        
         print("Getting recent data...")
         recent_data = db_manager.get_all_data()  # Removed session ID filter for now
         print(f"Recent data count: {len(recent_data)}")
-        
-        # Debug: Print first record to check structure
-        if recent_data:
-            print(f"Sample record structure: {list(recent_data[0].keys())}")
-            print(f"Sample validation_status: {recent_data[0].get('validation_status')}")
-        
-        # Make sure we have all required stats
-        if not isinstance(stats, dict):
-            stats = {}
-        
-        default_stats = {
-            'total_records': 0,
-            'average_quality': 0.0,
-            'product_distribution': {},
-            'status_counts': {'processed': 0, 'pending': 0, 'error': 0},
-            'recent_activity': 0,
-            'processed_records': 0,
-            'pending_records': 0,
-            'error_records': 0
-        }
-        
-        # Update defaults with actual stats
-        for key, value in stats.items():
-            default_stats[key] = value
-        
-        print(f"Final stats for template: {default_stats}")
-        return render_template('index.html', stats=default_stats, recent_data=recent_data)
-        
+        # Get up-to-date statistics
+        stats = db_manager.get_statistics()
+        print(f"Final stats for template: {stats}")
+        return render_template('index.html', stats=stats, recent_data=recent_data)
     except Exception as e:
         print(f"Error in index route: {e}")
         print(f"Error type: {type(e)}")
         import traceback
         print("Full traceback:")
         traceback.print_exc()
-        
         # Return safe defaults
         safe_stats = {
             'total_records': 0,
@@ -1247,12 +1220,12 @@ def compare():
     print(f"Database path: {db_manager.db_path}")
     print(f"Database file exists: {os.path.exists(db_manager.db_path)}")
     
-    # CRITICAL TEST: Use the exact same line as view_data route
-    print("CALLING: db_manager.get_all_data() - EXACT SAME AS VIEW_DATA")
-    all_data = db_manager.get_all_data()
+    # Use the same method as view_data route
+    print("CALLING: db_manager.get_all_records() - EXACT SAME AS VIEW_DATA")
+    all_data = db_manager.get_all_records()
     print(f"RESULT: {type(all_data)} with {len(all_data)} records")
     
-    # ALWAYS assign processed_records (this was the bug!)
+    # Assign processed_records for template compatibility
     processed_records = all_data
     print(f"processed_records assignment: {len(processed_records)} records")
     
@@ -1655,21 +1628,10 @@ def api_upload_calculator():
         
         # Return success with the path that should be used
         calculator_path = f'/calculators/uploaded/{filename}'
-        
-        return jsonify({
-            'success': True,
-            'message': f'Calculator "{filename}" uploaded successfully',
-            'calculator_path': calculator_path,
-            'name': calculator_data.get('name', filename.replace('.json', '')),
-            'product_type': calculator_data.get('product_type', 'unknown')
-        })
-        
+        return jsonify({'success': True, 'message': 'Calculator uploaded successfully', 'calculator_path': calculator_path})
     except Exception as e:
-        print(f"Error uploading calculator: {e}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'success': False, 'message': f'Error uploading calculator: {str(e)}'})
-
+        
 @app.route('/api/upload-template', methods=['POST'])
 def api_upload_template():
     """API endpoint to upload and process template files"""
