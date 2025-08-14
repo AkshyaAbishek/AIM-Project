@@ -70,8 +70,11 @@ def main():
     ensure_directories()
     check_database()
     
-    # Stay in the project root directory (where web_app.py is now located)
-    print(f"📂 Working directory: {PROJECT_ROOT}")
+    # Change to web app directory
+    web_app_dir = PROJECT_ROOT / 'core' / 'web'
+    os.chdir(web_app_dir)
+    
+    print(f"📂 Working directory: {web_app_dir}")
     print("🌐 Starting AIM Web Application...")
     print("=" * 50)
     
@@ -81,10 +84,13 @@ def main():
     os.environ['AIM_UPLOAD_PATH'] = str(PROJECT_ROOT / 'runtime' / 'uploads')
     os.environ['AIM_EXPORT_PATH'] = str(PROJECT_ROOT / 'runtime' / 'exports')
     
-    # Launch the web application from root directory
+    # Launch the web application
     try:
-        # Run the Flask application from the root directory
-        subprocess.run([sys.executable, 'web_app.py'], cwd=PROJECT_ROOT)
+        # Try to import and run the web app
+        sys.path.insert(0, str(web_app_dir))
+        
+        # Run the Flask application
+        subprocess.run([sys.executable, 'web_app.py'], cwd=web_app_dir)
         
     except KeyboardInterrupt:
         print("\n🛑 Application stopped by user")

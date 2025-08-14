@@ -332,3 +332,81 @@ class WebDatabaseManager:
             }
         else:
             return {'name': 'Unknown Calculator', 'fields': {}}
+    
+    def get_recent_records(self, limit: int = 5) -> list:
+        """Return the most recent records from user_data table."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM user_data ORDER BY created_date DESC LIMIT ?", (limit,))
+                columns = [description[0] for description in cursor.description]
+                records = []
+                for row in cursor.fetchall():
+                    record = dict(zip(columns, row))
+                    try:
+                        if record.get('json_data'):
+                            record['json_data'] = json.loads(record['json_data'])
+                    except:
+                        pass
+                    records.append(record)
+                return records
+        except Exception as e:
+            print(f"Error getting recent records: {e}")
+            return []
+    
+    def perform_data_comparison(self, source_data: Dict, calculator_data: Dict) -> Dict:
+        """Compare source data with calculator reference and generate comparison result"""
+        from datetime import datetime
+        calculator_fields = calculator_data.get('fields', {})
+        comparison_fields = []
+        # Stats
+        total_fields = len(calculator_fields)
+        matching_fields = 0
+        missing_fields = 0
+        filled_fields = 0
+        for field_name, field_config in calculator_fields.items():
+            source_value = source_data.get(field_name)
+            calculator_value = field_config.get('sample')
+            field_result = {
+                'field_name': field_name,
+                'source_value': source_value,
+                'calculator_value': calculator_value,
+                'required': field_config.get('required', False),
+                'data_type': field_config.get('type', 'string'),
+                'description': field_config.get('description', ''),
+                'values_match': False
+            }
+            # Check if values match
+            if source_value is not None and source_value != '' and calculator_value is not None and calculator_value != '':
+                source_str = str(source_value).strip().lower()
+                calc_str = str(calculator_value).strip().lower()
+                field_result['values_match'] = (source_str == calc_str)
+            # Determine status
+            if source_value is not None and source_value != '':
+                if field_result['values_match']:
+                    field_result['status'] = 'match'
+                    matching_fields += 1
+                else:
+                    field_result['status'] = 'mismatch'
+            else:
+                if calculator_value and field_config.get('required', False):
+                    field_result['status'] = 'missing'
+                    missing_fields += 1
+                elif calculator_value:
+                    field_result['status'] = 'can_fill'
+                    filled_fields += 1
+                else:
+                    field_result['status'] = 'missing'
+                    missing_fields += 1
+            comparison_fields.append(field_result)
+        return {
+            'stats': {
+                'total_fields': total_fields,
+                'matching_fields': matching_fields,
+                'missing_fields': missing_fields,
+                'filled_fields': filled_fields,
+                'completion_percentage': round((matching_fields / total_fields) * 100, 2) if total_fields > 0 else 0
+            },
+            'fields': comparison_fields,
+            'comparison_date': datetime.now().isoformat()
+        }
