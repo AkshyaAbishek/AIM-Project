@@ -1,0 +1,38 @@
+{
+  "name": "Life Insurance Mapping",
+  "product_type": "life_insurance",
+  "description": "Standard life insurance field mapping",
+  "created_date": "2025-08-14T15:50:13.360011",
+  "field_mappings": [
+    {
+      "source": "PolicyNumber",
+      "target": "policy_number",
+      "transformation": "trim",
+      "required": true
+    },
+    {
+      "source": "InsuredName",
+      "target": "insured_name",
+      "transformation": "trim",
+      "required": true
+    },
+    {
+      "source": "DateOfBirth",
+      "target": "birth_date",
+      "transformation": "date_format",
+      "required": true
+    },
+    {
+      "source": "Gender",
+      "target": "gender",
+      "transformation": "uppercase",
+      "required": true
+    },
+    {
+      "source": "CoverageAmount",
+      "target": "coverage_amount",
+      "transformation": "currency_format",
+      "required": true
+    }
+  ]
+}

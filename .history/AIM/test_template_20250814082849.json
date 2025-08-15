@@ -1,0 +1,37 @@
+{
+  "name": "Test Life Insurance Template",
+  "description": "Sample life insurance template for testing import functionality",
+  "product_type": "life_insurance",
+  "field_mappings": [
+    {
+      "source": "PolicyNumber",
+      "target": "policy_number",
+      "transformation": "trim",
+      "required": true
+    },
+    {
+      "source": "InsuredName",
+      "target": "insured_name",
+      "transformation": "trim",
+      "required": true
+    },
+    {
+      "source": "DateOfBirth",
+      "target": "birth_date",
+      "transformation": "date_format",
+      "required": true
+    },
+    {
+      "source": "Gender",
+      "target": "gender",
+      "transformation": "uppercase",
+      "required": true
+    },
+    {
+      "source": "CoverageAmount",
+      "target": "coverage_amount",
+      "transformation": "currency_format",
+      "required": true
+    }
+  ]
+}

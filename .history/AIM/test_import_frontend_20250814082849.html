@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Import Template</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    <h1>Test Import Template Functionality</h1>
+    
+    <button type="button" onclick="triggerFileUpload()">Import Template</button>
+    <input type="file" id="templateFileInput" accept=".json,.xlsx,.csv" style="display: none;" onchange="handleFileUpload(event)">
+    
+    <div id="results"></div>
+    
+    <script>
+        // Test the exact JavaScript functions from field_mapping.html
+        
+        function triggerFileUpload() {
+            console.log('triggerFileUpload called');
+            const fileInput = document.getElementById('templateFileInput');
+            if (fileInput) {
+                fileInput.click();
+            } else {
+                console.error('templateFileInput element not found');
+            }
+        }
+
+        function handleFileUpload(event) {
+            console.log('handleFileUpload called');
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const fileName = file.name.toLowerCase();
+            console.log('Uploading file:', fileName);
+            
+            if (fileName.endsWith('.json')) {
+                handleJSONUpload(file);
+            } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+                handleExcelUpload(file);
+            } else {
+                alert('Please upload a JSON or Excel file.');
+            }
+        }
+
+        function handleJSONUpload(file) {
+            console.log('Processing JSON file:', file.name);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const templateData = JSON.parse(e.target.result);
+                    console.log('JSON template data:', templateData);
+                    document.getElementById('results').innerHTML = '<h3>JSON Upload Success!</h3><pre>' + JSON.stringify(templateData, null, 2) + '</pre>';
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                    alert('Invalid JSON file. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function handleExcelUpload(file) {
+            console.log('Processing Excel file:', file.name);
+            // For Excel files, we'll upload to server for processing
+            const formData = new FormData();
+            formData.append('template_file', file);
+            
+            // Show loading indicator
+            document.getElementById('results').innerHTML = '<p>Processing Excel file...</p>';
+            
+            fetch('/api/upload-template', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Excel template processed:', data.template_data);
+                    document.getElementById('results').innerHTML = '<h3>Excel Upload Success!</h3><pre>' + JSON.stringify(data.template_data, null, 2) + '</pre>';
+                } else {
+                    console.error('Excel processing error:', data.message);
+                    alert('Error processing Excel file: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading Excel file:', error);
+                alert('Error uploading Excel file.');
+            });
+        }
+    </script>
+</body>
+</html>
